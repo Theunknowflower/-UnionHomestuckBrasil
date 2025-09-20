@@ -54,25 +54,29 @@ document.addEventListener('pointerdown', (e) => {
 
 /* Utility to programmatically render a post card (example)
    Use this or adapt to your current renderPosts() implementation */
-function createPostCard({id, author, avatarInitial, content, created_at, deleted}) {
-  const card = document.createElement('div');
-  card.className = 'post-card';
-  card.id = `post-${id}`;
-  card.innerHTML = `
-    <div class="post-head">
-      <div class="post-avatar">${avatarInitial || 'U'}</div>
-      <div class="post-meta">
-        <div class="name">${escapeHtml(author || 'Usuário')}</div>
-        <div class="time text-muted">${new Date(created_at).toLocaleString()}</div>
-      </div>
-    </div>
-    <div class="post-body">${escapeHtml(content)}</div>
-    <div class="post-actions">
-      <button class="btn-gradient" onclick="togglePostOpen('${id}')">Ver / Comentários</button>
-      <button class="btn-ghost" onclick="likePost('${id}')">Curtir</button>
-      <button class="btn-ghost" onclick="openProfile('${id}')">Perfil</button>
-    </div>
-    <div class="comments" id="comments-${id}"></div>
-  `;
-  return card;
+async function renderPosts() {
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("id, content, created_at, author:profiles(display_name)")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao carregar posts:", error.message);
+    return;
+  }
+
+  const forumList = document.getElementById("forumList");
+  forumList.innerHTML = "";
+
+  posts.forEach(p => {
+    const card = createPostCard({
+      id: p.id,
+      author: p.author?.display_name || "Usuário",
+      avatarInitial: (p.author?.display_name || "U")[0].toUpperCase(),
+      content: p.content,
+      created_at: p.created_at
+    });
+    forumList.appendChild(card);
+  });
 }
+
