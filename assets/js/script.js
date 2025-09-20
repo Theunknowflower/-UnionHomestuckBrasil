@@ -3,18 +3,27 @@
 const SUPABASE_URL = window.SUPABASE_URL || 'https://vhopcdzemdiqtvrwmqqo.supabase.co';
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI';
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Normaliza a URL para não depender de barra final
+const currentUrl = window.location.origin + window.location.pathname.replace(/\/$/, "");
+// Login com Discord
 const loginBtn = document.getElementById("loginWithDiscord");
 if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: {
-        redirectTo: window.location.origin
+        redirectTo: currentUrl // usa sempre a URL normalizada
       }
     });
-    if (error) console.error("Erro login Discord:", error.message);
+
+    if (error) {
+      console.error("Erro login Discord:", error.message);
+    } else {
+      console.log("Redirecionando para Discord...");
+    }
   });
 }
+
 console.log('Orion script loaded - set SUPABASE_URL & SUPABASE_ANON_KEY in index.html before script if using Supabase');
 /* ---------- UI helpers: sidebar toggle, post expand, gradient click state ---------- */
 
