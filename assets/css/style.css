@@ -1,0 +1,8 @@
+
+:root{--verde:#2e7d32;--branco:#fff;--bg:#fbfbfb}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);margin:0;color:#111}
+header{background:var(--verde);padding:20px;color:var(--branco);display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Press Start 2P';font-size:28px}
+.tab{background:linear-gradient(90deg,#3f8f4b,#1b5e20);padding:10px 14px;border-radius:8px;color:#fff;margin-right:8px;cursor:pointer;border:none}
+.container{padding:20px;display:flex;gap:20px}
+.btn-main{background:linear-gradient(90deg,#3f8f4b,#1b5e20);color:#fff;padding:10px;border-radius:8px;border:none}

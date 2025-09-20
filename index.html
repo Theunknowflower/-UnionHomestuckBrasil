@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Homestuck — Tradução de Fã (Orion)</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+<header>
+  <div class="brand-left"><div><div class="logo">HOMESTUCK</div><div class="subtitle logo-sub">TRADUÇÃO DE FÃ — ORION</div></div></div>
+  <nav class="tabs" aria-label="Navegação">
+    <div class="tab" role="button" onclick="openTab('ler')">LER</div>
+    <div class="tab" role="button" onclick="openTab('traducao')">TRADUÇÃO</div>
+    <div class="tab" role="button" onclick="openTab('conquistas')">CONQUISTAS</div>
+    <div class="tab" role="button" onclick="openTab('data')">DATA</div>
+    <div class="tab" role="button" onclick="openTab('temas')">TEMAS</div>
+  </nav>
+  <div class="user-area">
+    <div style="display:flex;flex-direction:column;align-items:flex-end">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div id="headerUser">Convidado</div>
+      </div>
+      <div style="margin-top:6px">
+        <button class="btn-small" id="loginWithDiscord">Entrar com Discord</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container" id="app">
+  <section>
+    <div id="ler" class="panel" style="display:block">
+      <h2>Ler — Página atual</h2>
+      <div class="reader-image" id="readerArea"><img id="readerImg" src="exemplo.png" alt="Painel" /><div class="reader-cta"><button class="btn-main" id="readPageBtn">Ler (embed)</button></div></div>
+      <div class="embed-frame" id="embedWrap" style="display:none"><iframe id="pageEmbed"></iframe></div>
+      <div class="reader-footer"><div class="small-actions"><button class="btn-small" id="savePageBtn">💾 Salvar</button><button class="btn-small" id="prevPageBtn">◀ Anterior</button><button class="btn-small" id="openDataBtn">📅 Data</button></div><div class="meta" id="pageMeta">Capítulo 1 • Página 1</div></div>
+      <div style="margin-top:12px"><h3>Comentários</h3><div id="commentSection"><div style="color:#888">Você precisa estar logado para comentar.</div></div></div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/js/script.js"></script>
+</body>
+</html>
