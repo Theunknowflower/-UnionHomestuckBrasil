@@ -83,3 +83,69 @@ async function renderPosts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function addComment(postId, content) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert("Você precisa estar logado!");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("comments")
+    .insert({
+      post_id: postId,
+      author_id: user.id,
+      content: content
+    });
+
+  if (error) {
+    console.error("Erro ao comentar:", error.message);
+    alert("Erro: " + error.message);
+  } else {
+    renderComments(postId); // atualiza a lista de comentários
+  }
+}
+
+async function renderComments(postId) {
+  const { data: comments, error } = await supabase
+    .from("comments")
+    .select("id, content, created_at, author:profiles(display_name)")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao carregar comentários:", error.message);
+    return;
+  }
+
+  const section = document.getElementById("comments-" + postId);
+  section.innerHTML = "";
+
+  comments.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.innerHTML = `<strong>${c.author?.display_name || "Usuário"}</strong>: ${c.content}`;
+    section.appendChild(div);
+  });
+}
+
+
