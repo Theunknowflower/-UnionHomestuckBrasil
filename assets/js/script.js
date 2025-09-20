@@ -81,6 +81,8 @@ async function renderPosts() {
 }
 
 
+/*button discord*/
+
 document.getElementById("loginWithDiscord")?.addEventListener("click", async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "discord",
@@ -91,3 +93,33 @@ document.getElementById("loginWithDiscord")?.addEventListener("click", async () 
   if (error) console.error("Erro login Discord:", error.message);
 });
 
+
+
+
+/*renderPost*/
+
+async function renderPosts() {
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("id, content, created_at, author:profiles(display_name)")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Erro ao carregar posts:", error.message);
+    return;
+  }
+
+  const forumList = document.getElementById("forumList");
+  forumList.innerHTML = "";
+
+  posts.forEach(p => {
+    const card = createPostCard({
+      id: p.id,
+      author: p.author?.display_name || "Usuário",
+      avatarInitial: (p.author?.display_name || "U")[0].toUpperCase(),
+      content: p.content,
+      created_at: p.created_at
+    });
+    forumList.appendChild(card);
+  });
+}
