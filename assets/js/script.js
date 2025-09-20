@@ -80,3 +80,14 @@ async function renderPosts() {
   });
 }
 
+
+document.getElementById("loginWithDiscord")?.addEventListener("click", async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "discord",
+    options: {
+      redirectTo: window.location.origin // ex: https://theunknowflower.github.io/UnionHomestuckBrasil
+    }
+  });
+  if (error) console.error("Erro login Discord:", error.message);
+});
+
