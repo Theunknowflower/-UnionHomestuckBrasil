@@ -227,3 +227,62 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     logoutBtn.style.display = "none";
   }
 });
+// === PERFIL DE USUÁRIO ===
+async function loadProfile() {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url, banner_url")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    console.error("Erro ao carregar perfil:", error.message);
+    return;
+  }
+
+  // Atualiza UI
+  document.getElementById("profileName").innerText = data?.display_name || "Usuário";
+  document.getElementById("profileEmail").innerText = user.email;
+  document.getElementById("profileAvatar").style.backgroundImage = data?.avatar_url ? `url(${data.avatar_url})` : "none";
+  document.getElementById("profileBanner").style.backgroundImage = data?.banner_url ? `url(${data.banner_url})` : "none";
+
+  // Preenche formulário
+  document.getElementById("displayNameInput").value = data?.display_name || "";
+  document.getElementById("avatarUrlInput").value = data?.avatar_url || "";
+  document.getElementById("bannerUrlInput").value = data?.banner_url || "";
+}
+
+// === Salvar perfil ===
+document.getElementById("profileForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+
+  const updates = {
+    id: user.id,
+    display_name: document.getElementById("displayNameInput").value,
+    avatar_url: document.getElementById("avatarUrlInput").value,
+    banner_url: document.getElementById("bannerUrlInput").value,
+    updated_at: new Date()
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(updates);
+
+  if (error) {
+    console.error("Erro ao salvar perfil:", error.message);
+    alert("Erro ao salvar perfil.");
+  } else {
+    alert("Perfil atualizado!");
+    loadProfile();
+  }
+});
+
+// Carrega perfil sempre que o usuário logar
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session?.user) loadProfile();
+});
