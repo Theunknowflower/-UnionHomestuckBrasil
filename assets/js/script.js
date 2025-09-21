@@ -234,8 +234,14 @@ async function renderComments(postId) {
 // === Adicionar comentário ===
 async function addComment(postId) {
   const input = document.getElementById(`commentInput-${postId}`);
+  if (!input) return;
   const content = input.value.trim();
-  if (!content) return;
+
+  if (!content) {
+    alert("Escreva algo antes de comentar!");
+    input.focus();
+    return;
+  }
 
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) {
@@ -244,21 +250,21 @@ async function addComment(postId) {
   }
 
   const { error } = await supabase.from("comments").insert({
-    post_id: postId,   // ✅ agora usa o UUID real do post
+    post_id: postId,  // 🔹 precisa ser UUID real
     user_id: user.id,
     content
   });
 
   if (error) {
     console.error("Erro ao comentar:", error.message);
-    alert("Erro ao comentar.");
+    alert("Erro ao salvar comentário.");
     return;
   }
 
   input.value = "";
   renderComments(postId);
 }
-window.addComment = addComment;
+
 
 // === Denunciar post ===
 async function reportPost(postId, reason = "Inapropriado") {
@@ -358,4 +364,66 @@ async function openProfile(userId) {
   openModal("profileModal");
 }
 window.openProfile = openProfile;
+// === THEME HANDLER (Orion) ===
+function applyTheme(theme) {
+  if (!theme) return;
+
+  // Fundo
+  if (theme.bgImage) {
+    document.body.style.background = `url(${theme.bgImage}) center/cover fixed`;
+  } else {
+    document.body.style.background = theme.bgColor || "#fff";
+  }
+
+  // Cor principal
+  document.documentElement.style.setProperty(
+    "--main-color",
+    theme.color || "#2e7d32"
+  );
+
+  // Salvar escolha no localStorage
+  try {
+    localStorage.setItem("selectedTheme", JSON.stringify(theme));
+  } catch (e) {
+    console.warn("Não foi possível salvar tema:", e);
+  }
+}
+
+// Reaplica tema salvo ao carregar página
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("selectedTheme");
+  if (saved) {
+    try {
+      applyTheme(JSON.parse(saved));
+    } catch (e) {
+      console.warn("Erro ao restaurar tema salvo:", e);
+    }
+  }
+});
+
+
+// banco/dados comic
+
+let currentPageIndex = 0;
+let pages =.from("pages").select("url") // 🔹 você vai puxar isso do banco futuramente (data/pages)
+
+function renderPage() {
+  if (!pages.length) return;
+  const frame = document.getElementById("readerFrame");
+  frame.innerHTML = `<iframe src="${pages[currentPageIndex]}" class="reader-iframe"></iframe>`;
+}
+
+document.getElementById("prevPageBtn").addEventListener("click", () => {
+  if (currentPageIndex > 0) {
+    currentPageIndex--;
+    renderPage();
+  }
+});
+
+document.getElementById("nextPageBtn").addEventListener("click", () => {
+  if (currentPageIndex < pages.length - 1) {
+    currentPageIndex++;
+    renderPage();
+  }
+});
 
