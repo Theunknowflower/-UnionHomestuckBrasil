@@ -371,7 +371,53 @@ if (createThemeBtn) {
       loadThemes();
     }
   });
+// Mostrar criador de temas apenas se admin
+async function checkIfAdmin() {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role === "admin") {
+    document.getElementById("adminThemeCreator").style.display = "block";
+  }
 }
+checkIfAdmin();
+
+// Aplicar tema
+function applyTheme(theme) {
+  document.body.style.background = theme.bgImage ? `url(${theme.bgImage})` : theme.bgColor;
+  document.documentElement.style.setProperty("--main-color", theme.color);
+}
+
+// Criar novo tema (apenas admin)
+const createThemeBtn = document.getElementById("createThemeBtn");
+if (createThemeBtn) {
+  createThemeBtn.addEventListener("click", async () => {
+    const theme = {
+      name: document.getElementById("themeName").value,
+      color: document.getElementById("themeColor").value,
+      bgColor: document.getElementById("themeBgColor").value,
+      bgImage: document.getElementById("themeBgImage").value
+    };
+
+    const { error } = await supabase
+      .from("settings")
+      .insert([{ key: "theme", value: JSON.stringify(theme) }]);
+
+    if (error) {
+      console.error("Erro ao salvar tema:", error.message);
+    } else {
+      alert("Tema criado!");
+      loadThemes();
+    }
+  });
+}
+
 // === PROFILE MODAL ===
 async function openProfile(userId) {
   const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
