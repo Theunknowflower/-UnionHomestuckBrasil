@@ -1,0 +1,43 @@
+
+:root{--verde:#2e7d32;--branco:#fff;--bg:#fbfbfb}
+*{box-sizing:border-box}
+body{font-family:Inter, Arial, Helvetica, sans-serif;background:var(--bg);margin:0;color:#111}
+header{background:var(--verde);padding:14px;color:var(--branco);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-family:'Press Start 2P';font-size:20px}
+.tabs{display:flex;gap:8px}
+.tab{background:linear-gradient(90deg,#3f8f4b,#1b5e20);padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
+.container{padding:18px;display:flex;gap:20px}
+.panel{flex:1;min-width:0}
+.side-section{width:300px}
+.info-box{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 12px rgba(0,0,0,0.04);margin-bottom:12px}
+
+/* Forum & posts */
+.forum-list{display:flex;flex-direction:column;gap:12px}
+.post-card{background:#fff;border-radius:12px;padding:12px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(0,0,0,0.03)}
+.post-head{display:flex;align-items:center;gap:12px}
+.post-avatar{width:44px;height:44px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;font-weight:700}
+.post-meta{display:flex;flex-direction:column}
+.post-meta .name{font-weight:700;font-size:14px}
+.post-meta .time{font-size:12px;color:#666}
+.post-body{margin-top:10px;font-size:14px;line-height:1.45}
+
+/* actions */
+.post-actions{display:flex;gap:8px;align-items:center;margin-top:12px}
+.btn-main{background:linear-gradient(90deg,#3f8f4b,#1b5e20);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer}
+.btn-small{background:#fff;color:#222;padding:6px 8px;border-radius:6px;border:1px solid rgba(0,0,0,0.06);cursor:pointer}
+
+/* comments */
+.comments{margin-top:12px;border-top:1px dashed #eee;padding-top:10px}
+.comment{padding:8px;border-radius:8px;background:#fafafa;margin-bottom:8px}
+.comment img{max-width:280px;border-radius:8px;margin-top:8px}
+
+/* modal */
+.modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);z-index:2000}
+.modal-inner{background:#fff;border-radius:12px;max-width:820px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
+
+/* responsive */
+@media (max-width:900px){
+  .container{flex-direction:column}
+  .side-section{width:100%}
+  .comment img{max-width:100%}
+}

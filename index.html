@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Homestuck — Tradução de Fã (Orion)</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+
+<!-- Set your Supabase project keys here (replace before deploy) -->
+<script>
+  // IMPORTANT: replace these with your real Supabase URL and ANON KEY (or inject via environment).
+  window.SUPABASE_URL = window.SUPABASE_URL || 'YOUR_SUPABASE_URL';
+  window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+</script>
+
+<!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+<header>
+  <div class="brand-left">
+    <div>
+      <div class="logo">HOMESTUCK</div>
+      <div class="subtitle logo-sub">TRADUÇÃO DE FÃ — ORION</div>
+    </div>
+  </div>
+
+  <nav class="tabs" aria-label="Navegação principal">
+    <div class="tab" role="button" onclick="openTab('ler')">LER</div>
+    <div class="tab" role="button" onclick="openTab('traducao')">TRADUÇÃO</div>
+    <div class="tab" role="button" onclick="openTab('conquistas')">CONQUISTAS</div>
+    <div class="tab" role="button" onclick="openTab('data')">DATA</div>
+    <div class="tab" role="button" onclick="openTab('temas')">TEMAS</div>
+  </nav>
+
+  <div class="user-area">
+    <div style="display:flex;flex-direction:column;align-items:flex-end">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div id="headerUser">Convidado</div>
+      </div>
+      <div style="margin-top:6px">
+        <button class="btn-small" id="loginWithDiscord">Entrar com Discord</button>
+        <button class="btn-small" id="signOutBtn" style="display:none">Sair</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container" id="app">
+  <section>
+    <!-- LER -->
+    <div id="ler" class="panel" style="display:block">
+      <h2>Ler — Página atual</h2>
+      <div class="reader-image" id="readerArea">
+        <img id="readerImg" src="exemplo.png" alt="Painel da comic" />
+        <div class="reader-cta">
+          <button class="btn-main" id="readPageBtn">Ler esta página (embed)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRADUÇÃO -->
+    <div id="traducao" class="panel" style="display:none;margin-top:16px">
+      <h2>Tradução — Informações do Projeto</h2>
+      <div class="info-box">
+        <p><strong>Equipe:</strong> Rafa + Comunidade</p>
+        <p><strong>Status:</strong> Ato 1 — em progresso</p>
+        <p><strong>Licença:</strong> Trabalho de fã, sem fins lucrativos. Homestuck © Andrew Hussie</p>
+      </div>
+    </div>
+
+    <!-- CONQUISTAS -->
+    <div id="conquistas" class="panel" style="display:none;margin-top:16px">
+      <h2>Conquistas & Fanartes</h2>
+      <div id="achievementsList"></div>
+    </div>
+
+    <!-- DATA (INDEX / Fórum) -->
+    <div id="data" class="panel" style="display:none;margin-top:16px">
+      <h2>Data — Fórum</h2>
+      <div style="margin-bottom:12px">
+        <button class="btn-main" id="openNewPostBtn">Novo Post</button>
+      </div>
+
+      <div id="forumList" class="forum-list"></div>
+    </div>
+
+    <!-- TEMAS -->
+    <div id="temas" class="panel" style="display:none;margin-top:16px">
+      <h2>Escolher Tema</h2>
+      <div id="themeList" class="theme-buttons"></div>
+    </div>
+  </section>
+
+  <aside class="side-section">
+    <div class="info-box">
+      <h3>Informações do Projeto</h3>
+      <p><strong>Equipe:</strong> Rafa + Comunidade</p>
+    </div>
+  </aside>
+</main>
+
+<!-- New post modal -->
+<div id="newPostModal" class="modal" aria-hidden="true" style="display:none">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closeNewPost()">✕</button>
+    <h3>Novo Post</h3>
+    <textarea id="newPostContent" placeholder="Escreva sua postagem..." style="width:100%;height:120px"></textarea>
+    <div style="margin-top:8px">
+      <button class="btn-main" id="publishPostBtn">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/script.js"></script>
+</body>
+</html>
