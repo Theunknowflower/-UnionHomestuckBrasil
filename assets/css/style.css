@@ -248,3 +248,34 @@ header{background:var(--verde);padding:14px;color:var(--branco);display:flex;ali
   background: #f8f8f8;
   padding: 12px;
   border-radius: 8
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: none; /* 🔹 esconde por padrão */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+}
+.modal[aria-hidden="false"] {
+  display: flex; /* 🔹 só mostra quando for aberto */
+}
+.modal-inner {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+.modal-close {
+  position: absolute;
+  top: 10px; right: 14px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
