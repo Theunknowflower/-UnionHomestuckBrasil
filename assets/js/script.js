@@ -309,120 +309,138 @@ document.getElementById("profileForm")?.addEventListener("submit", async (e) => 
     loadProfile();
   }
 });
-// === THEME SYSTEM ===
-const themeModalBtn = document.getElementById("openThemeModal");
-if (themeModalBtn) {
-  themeModalBtn.addEventListener("click", () => {
-    openModal("themeModal");
+// === THEME MODULE (ORION SAFE BLOCK) ===
+(function(){
+  if (window.__orion_theme_registered) return;
+  window.__orion_theme_registered = true;
+
+  // helpers
+  function el(id){ return document.getElementById(id); }
+
+  // modal helpers (definem closeModal/openModal se não existirem)
+  window.openModal = window.openModal || function(id){
+    const m = el(id);
+    if (!m) return;
+    m.setAttribute('aria-hidden','false');
+    m.style.display = 'flex';
+  };
+  window.closeModal = window.closeModal || function(id){
+    const m = el(id);
+    if (!m) return;
+    m.setAttribute('aria-hidden','true');
+    m.style.display = 'none';
+  };
+
+  // Aplica tema (salva escolha no localStorage)
+  function applyTheme(theme){
+    if (!theme) return;
+    if (theme.bgImage) {
+      document.body.style.background = `url(${theme.bgImage}) center/cover fixed`;
+      document.body.style.backgroundSize = 'cover';
+    } else {
+      document.body.style.background = theme.bgColor || '';
+      document.body.style.backgroundSize = '';
+    }
+    document.documentElement.style.setProperty('--main-color', theme.color || '');
+    try { localStorage.setItem('selectedTheme', JSON.stringify(theme)); } catch(e){}
+  }
+  window.applyTheme = applyTheme;
+
+  // Carrega temas da tabela settings (key='theme')
+  async function loadThemes(){
+    const themeList = el('themeList');
+    if (!themeList) return;
+    themeList.innerHTML = '<div>Carregando temas...</div>';
+    const { data, error } = await supabase.from('settings').select('id,value').eq('key','theme');
+    if (error) {
+      console.error('Erro ao carregar temas:', error);
+      themeList.innerHTML = '<div>Erro ao carregar temas</div>';
+      return;
+    }
+    themeList.innerHTML = '';
+    (data || []).forEach(row => {
+      let theme;
+      try { theme = JSON.parse(row.value); } catch(e){ return; }
+      const btn = document.createElement('button');
+      btn.className = 'btn-theme';
+      btn.textContent = theme.name || 'Tema';
+      if (theme.bgImage) {
+        btn.style.backgroundImage = `url(${theme.bgImage})`;
+        btn.style.backgroundSize = 'cover';
+        btn.style.backgroundPosition = 'center';
+      } else {
+        btn.style.background = theme.bgColor || '#444';
+      }
+      btn.style.color = theme.color || '#fff';
+
+      btn.addEventListener('mouseenter', () => applyTheme(theme)); // preview
+      btn.addEventListener('mouseleave', () => {
+        const saved = localStorage.getItem('selectedTheme');
+        if (saved) try { applyTheme(JSON.parse(saved)); } catch(e){ document.body.style.background = ''; document.documentElement.style.removeProperty('--main-color'); }
+        else { document.body.style.background = ''; document.documentElement.style.removeProperty('--main-color'); }
+      });
+      btn.addEventListener('click', () => applyTheme(theme)); // apply permanently (until changed)
+      themeList.appendChild(btn);
+    });
+
+    // show admin creator if admin (fetch profile.role)
+    try {
+      const { data: udata } = await supabase.auth.getUser();
+      const user = udata?.user;
+      if (user) {
+        const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+        if (prof?.role === 'admin') {
+          const adminEl = el('adminThemeCreator');
+          if (adminEl) adminEl.style.display = 'block';
+        }
+      }
+    } catch (e) { console.warn('checkIfAdmin failed', e); }
+
+    // apply saved theme (user preference)
+    try {
+      const saved = localStorage.getItem('selectedTheme');
+      if (saved) applyTheme(JSON.parse(saved));
+    } catch(e){}
+  }
+  window.loadThemes = loadThemes;
+
+  // Criar novo tema (attach safe)
+  function attachCreateThemeHandler(){
+    const btn = el('createThemeBtn');
+    if (!btn) return;
+    // remove previous handlers if any (safe)
+    if (btn._orion_attached) return;
+    btn._orion_attached = true;
+    btn.addEventListener('click', async () => {
+      const name = el('themeName')?.value || 'Tema';
+      const color = el('themeColor')?.value || '#ffffff';
+      const bgColor = el('themeBgColor')?.value || '#000000';
+      const bgImage = el('themeBgImage')?.value || '';
+      const theme = { name, color, bgColor, bgImage };
+      const { error } = await supabase.from('settings').insert([{ key: 'theme', value: JSON.stringify(theme) }]);
+      if (error) {
+        console.error('Erro ao salvar tema:', error);
+        alert('Erro ao salvar tema: ' + (error.message || JSON.stringify(error)));
+      } else {
+        alert('Tema criado!');
+        await loadThemes();
+      }
+    });
+  }
+
+  // iniciadores
+  document.addEventListener('DOMContentLoaded', () => {
     loadThemes();
-  });
-}
-
-// Carregar temas
-async function loadThemes() {
-  const { data, error } = await supabase.from("settings").select("*").eq("key", "theme");
-  const container = document.getElementById("themeList");
-  container.innerHTML = "";
-
-  if (error) {
-    console.error("Erro ao carregar temas:", error.message);
-    return;
-  }
-
-  data.forEach(t => {
-    const theme = JSON.parse(t.value);
-    const btn = document.createElement("button");
-    btn.className = "btn-small";
-    btn.style.background = theme.bgImage ? `url(${theme.bgImage})` : theme.bgColor;
-    btn.style.color = theme.color;
-    btn.innerText = theme.name;
-    btn.onclick = () => applyTheme(theme);
-    container.appendChild(btn);
+    attachCreateThemeHandler();
+    // garanta que modais iniciem escondidos
+    ['themeModal','profileModal'].forEach(id => {
+      const m = el(id);
+      if (m) { m.setAttribute('aria-hidden','true'); m.style.display = 'none'; }
+    });
   });
 
-  // Se admin -> mostra criador
-  const user = (await supabase.auth.getUser()).data.user;
-  if (user && user.role === "admin") {
-    document.getElementById("adminThemeCreator").style.display = "block";
-  }
-}
+})();
 
-// Aplicar tema
-function applyTheme(theme) {
-  document.body.style.background = theme.bgImage ? `url(${theme.bgImage})` : theme.bgColor;
-  document.documentElement.style.setProperty("--main-color", theme.color);
-}
-
-// Criar novo tema (apenas admin)
-const createThemeBtn = document.getElementById("createThemeBtn");
-if (createThemeBtn) {
-  createThemeBtn.addEventListener("click", async () => {
-    const theme = {
-      name: document.getElementById("themeName").value,
-      color: document.getElementById("themeColor").value,
-      bgColor: document.getElementById("themeBgColor").value,
-      bgImage: document.getElementById("themeBgImage").value
-    };
-
-    const { error } = await supabase
-      .from("settings")
-      .insert([{ key: "theme", value: JSON.stringify(theme) }]);
-
-    if (error) {
-      console.error("Erro ao salvar tema:", error.message);
-    } else {
-      alert("Tema criado!");
-      loadThemes();
-    }
-  });
-} // 🔥 agora fecha o if certinho
-
-// Mostrar criador de temas apenas se admin
-async function checkIfAdmin() {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role === "admin") {
-    document.getElementById("adminThemeCreator").style.display = "block";
-  }
-}
-checkIfAdmin();
-
-// Aplicar tema
-function applyTheme(theme) {
-  document.body.style.background = theme.bgImage ? `url(${theme.bgImage})` : theme.bgColor;
-  document.documentElement.style.setProperty("--main-color", theme.color);
-}
-
-// Criar novo tema (apenas admin)
-const createThemeBtn = document.getElementById("createThemeBtn");
-if (createThemeBtn) {
-  createThemeBtn.addEventListener("click", async () => {
-    const theme = {
-      name: document.getElementById("themeName").value,
-      color: document.getElementById("themeColor").value,
-      bgColor: document.getElementById("themeBgColor").value,
-      bgImage: document.getElementById("themeBgImage").value
-    };
-
-    const { error } = await supabase
-      .from("settings")
-      .insert([{ key: "theme", value: JSON.stringify(theme) }]);
-
-    if (error) {
-      console.error("Erro ao salvar tema:", error.message);
-    } else {
-      alert("Tema criado!");
-      loadThemes();
-    }
-  });
-}
 
 // === PROFILE MODAL ===
 async function openProfile(userId) {
