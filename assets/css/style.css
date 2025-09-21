@@ -41,3 +41,46 @@ header{background:var(--verde);padding:14px;color:var(--branco);display:flex;ali
   .side-section{width:100%}
   .comment img{max-width:100%}
 }
+/* Botões gradiente */
+.btn-gradient {
+  background: linear-gradient(45deg, #2ecc71, #27ae60);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease;
+}
+.btn-gradient.active {
+  transform: scale(0.95);
+  background: linear-gradient(45deg, #27ae60, #2ecc71);
+}
+
+/* Post card */
+.post-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.post-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.post-body {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.comments {
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+.comment {
+  margin-bottom: 6px;
+}
