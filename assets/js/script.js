@@ -363,7 +363,11 @@ if (createThemeBtn) {
       bgColor: document.getElementById("themeBgColor").value,
       bgImage: document.getElementById("themeBgImage").value
     };
-    const { error } = await supabase.from("settings").insert([{ key: "theme", value: JSON.stringify(theme) }]);
+
+    const { error } = await supabase
+      .from("settings")
+      .insert([{ key: "theme", value: JSON.stringify(theme) }]);
+
     if (error) {
       console.error("Erro ao salvar tema:", error.message);
     } else {
@@ -371,6 +375,8 @@ if (createThemeBtn) {
       loadThemes();
     }
   });
+} // 🔥 agora fecha o if certinho
+
 // Mostrar criador de temas apenas se admin
 async function checkIfAdmin() {
   const user = (await supabase.auth.getUser()).data.user;
