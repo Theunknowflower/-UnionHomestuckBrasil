@@ -154,58 +154,38 @@ async function renderComments(postId) {
     </div>
   `).join("");
 }
-
-// Inserir novo comentário
 async function addComment(postId) {
-  const textarea = document.getElementById(`comment-input-${postId}`);
-  if (!textarea) return;
-  const content = textarea.value.trim();
-  if (!content) return;
-
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) {
+  const profile = await getCurrentProfile();
+  if (!profile) {
     alert("Você precisa estar logado!");
     return;
   }
 
-  const { error } = await supabase
-    .from("comments")
-    .insert([{ post_id: postId, user_id: user.id, content }]);
-
-  if (error) {
-    console.error("Erro ao comentar:", error.message);
-    return;
-  }
-
-  textarea.value = "";
-  renderComments(postId);
-}
-
-
-
-async function addPost(content) {
-  const profile = await getCurrentProfile();
-  if (!profile) {
-    alert("Você precisa estar logado para postar.");
+  const text = document.getElementById(`comment-input-${postId}`)?.value;
+  if (!text || !text.trim()) {
+    alert("Comentário está vazio!");
     return;
   }
 
   const { data, error } = await supabase
-    .from("posts")
-    .insert([{ content, author_id: profile.id, user_id: profile.id }]); // 👈 autor e user_id
+    .from("comments")
+    .insert([
+      {
+        post_id: postId,
+        author_id: profile.id,
+        content: text.trim()
+      }
+    ]);
 
   if (error) {
-    console.error("Erro ao postar:", error.message);
-  } else {
-    console.log("Post criado:", data);
-    renderPosts();
+    console.error("Erro ao comentar:", error.message);
+    alert("Erro ao comentar: " + error.message);
+    return;
   }
+
+  document.getElementById(`comment-input-${postId}`).value = "";
+  renderComments(postId);
 }
-
-
-
-
-
 
 
 
