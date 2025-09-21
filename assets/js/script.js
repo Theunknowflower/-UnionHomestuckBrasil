@@ -26,8 +26,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   const avatar = document.getElementById("userAvatar");
   if (session?.user) {
     const email = session.user.email || "Usuário";
-    headerUser.innerText = email;
-    avatar.innerText = email[0].toUpperCase();
+ let displayName = session.user.user_metadata.full_name 
+               || session.user.email.split("@")[0]; 
   } else {
     headerUser.innerText = "Convidado";
     avatar.innerText = "U";
