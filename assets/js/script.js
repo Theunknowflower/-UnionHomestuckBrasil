@@ -5,6 +5,48 @@
 const SUPABASE_URL = window.SUPABASE_URL || "https://vhopcdzemdiqtvrwmqqo.supabase.co";
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// === Modal helpers globais (garante openModal / closeModal) ===
+window.openModal = window.openModal || function(id){
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.setAttribute('aria-hidden','false');
+  m.style.display = 'flex';
+  // opcional: foco no primeiro botão dentro do modal
+  const focusable = m.querySelector('button, [tabindex], input, textarea');
+  if (focusable) focusable.focus();
+};
+
+window.closeModal = window.closeModal || function(id){
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.setAttribute('aria-hidden','true');
+  m.style.display = 'none';
+};
+
+// Ao carregar a página: garante que todos os modais iniciem escondidos
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal').forEach(m => {
+    m.setAttribute('aria-hidden','true');
+    m.style.display = 'none';
+  });
+
+  // Anexa event listeners aos botões com class="modal-close"
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    // se já tiver onclick inline, isso não quebra; adicionamos listener seguro
+    btn.addEventListener('click', (e) => {
+      // procura o modal pai mais próximo
+      const modal = btn.closest('.modal');
+      if (modal && modal.id) closeModal(modal.id);
+    });
+  });
+
+  // opcional: fecha modal ao clicar fora do inner
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal(modal.id);
+    });
+  });
+});
 
 console.log("Orion script loaded ✅");
 
