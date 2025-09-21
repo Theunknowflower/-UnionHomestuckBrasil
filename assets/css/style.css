@@ -279,3 +279,15 @@ header{background:var(--verde);padding:14px;color:var(--branco);display:flex;ali
   font-size: 20px;
   cursor: pointer;
 }
+.modal {
+  display: none; /* 🔥 fecha sempre até que seja aberto por JS */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+}
+.modal[aria-hidden="false"] {
+  display: flex; /* só abre quando o JS ativa */
+  align-items: center;
+  justify-content: center;
+}
