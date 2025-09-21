@@ -154,40 +154,45 @@ async function renderComments(postId) {
     </div>
   `).join("");
 }
-async function addComment(postId) {
-  const profile = await getCurrentProfile();
-  if (!profile) {
-    alert("Você precisa estar logado!");
-    return;
-  }
+
 
   const text = document.getElementById(`comment-input-${postId}`)?.value;
   if (!text || !text.trim()) {
     alert("Comentário está vazio!");
     return;
   }
+async function addComment(postId) {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) {
+    alert("Você precisa estar logado para comentar.");
+    return;
+  }
 
-  const { data, error } = await supabase
+  const text = document.getElementById(`comment-input-${postId}`)?.value;
+  if (!text || !text.trim()) {
+    alert("Comentário vazio!");
+    return;
+  }
+
+  const { error } = await supabase
     .from("comments")
     .insert([
       {
         post_id: postId,
-        author_id: profile.id,
+        user_id: user.id, // 🔥 ou author_id: user.id (depende da tua tabela)
         content: text.trim()
       }
     ]);
 
   if (error) {
     console.error("Erro ao comentar:", error.message);
-    alert("Erro ao comentar: " + error.message);
+    alert("Erro: " + error.message);
     return;
   }
 
   document.getElementById(`comment-input-${postId}`).value = "";
-  renderComments(postId);
+  renderComments(postId); // atualiza a lista
 }
-
-
 
 
 
