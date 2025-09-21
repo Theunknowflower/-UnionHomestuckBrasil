@@ -1,10 +1,10 @@
-// Orion scaffold script - Supabase + UI
+/ Orion scaffold script - Supabase + UI
 // ======================================
 
 // === CONFIG SUPABASE ===
 const SUPABASE_URL = window.SUPABASE_URL || "https://vhopcdzemdiqtvrwmqqo.supabase.co";
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)eateClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log("Orion script loaded ✅");
 
