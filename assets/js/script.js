@@ -24,26 +24,29 @@ if (loginBtn) {
 supabase.auth.onAuthStateChange(async (event, session) => {
   const headerUser = document.getElementById("headerUser");
   const avatar = document.getElementById("userAvatar");
+
   if (session?.user) {
-    const email = session.user.email || "Usuário";
- let displayName = session.user.user_metadata.full_name 
-               || session.user.email.split("@")[0]; 
+    let displayName =
+      session.user.user_metadata.full_name ||
+      session.user.email.split("@")[0];
+
+    headerUser.innerText = displayName;
+    avatar.innerText = displayName[0].toUpperCase();
   } else {
     headerUser.innerText = "Convidado";
     avatar.innerText = "U";
   }
 });
 
-
 // === FUNÇÃO openTab (corrige menus) ===
 function openTab(tabId) {
-  // esconde todos
-  document.querySelectorAll(".panel").forEach(p => (p.style.display = "none"));
-  // mostra selecionado
+  document.querySelectorAll(".panel").forEach(
+    (p) => (p.style.display = "none")
+  );
   const el = document.getElementById(tabId);
   if (el) el.style.display = "block";
 }
-window.openTab = openTab; // Orion fix
+window.openTab = openTab;
 
 // === FORUM SIDEBAR ===
 function toggleForumSidebar() {
@@ -54,14 +57,13 @@ function toggleForumSidebar() {
 }
 window.toggleForumSidebar = toggleForumSidebar;
 
-// Eventos globais
 document.addEventListener("click", (e) => {
   if (e.target && (e.target.id === "openNewPostBtn" || e.target.id === "openForumBtn")) {
     toggleForumSidebar();
   }
 });
 
-// === Renderizar posts + expandir comentários ===
+// === Renderizar posts ===
 async function renderPosts() {
   const { data: posts, error } = await supabase
     .from("posts")
@@ -76,7 +78,7 @@ async function renderPosts() {
   const forumList = document.getElementById("forumList");
   forumList.innerHTML = "";
 
-  posts.forEach(p => {
+  posts.forEach((p) => {
     const card = document.createElement("div");
     card.className = "post-card";
     card.id = `post-${p.id}`;
@@ -95,9 +97,6 @@ async function renderPosts() {
     forumList.appendChild(card);
   });
 }
-
-
-
 
 // === Criar novo post ===
 const publishBtn = document.getElementById("publishPostBtn");
@@ -125,74 +124,7 @@ if (publishBtn) {
   });
 }
 
-function togglePostOpen(postId) {
-  const commentsEl = document.getElementById(`comments-${postId}`);
-  if (!commentsEl) return;
-  const isOpen = commentsEl.style.display === "block";
-  commentsEl.style.display = isOpen ? "none" : "block";
-  if (!isOpen) loadComments(postId);
-}
-
-async function loadComments(postId) {
-  const { data: comments, error } = await supabase
-    .from("comments")
-    .select("content, created_at, profiles(display_name)")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    console.error("Erro ao carregar comentários:", error.message);
-    return;
-  }
-
-  const commentsEl = document.getElementById(`comments-${postId}`);
-  commentsEl.innerHTML = comments.map(c => `
-    <div class="comment">
-      <strong>${c.profiles?.display_name || "Usuário"}</strong>: ${c.content}
-      <small>${new Date(c.created_at).toLocaleString()}</small>
-    </div>
-  `).join("");
-}
-
-// === Adicionar comentário ===
-async function addComment(postId, text) {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return alert("Você precisa estar logado para comentar.");
-
-  const { error } = await supabase
-    .from("comments")
-    .insert([{ post_id: postId, user_id: user.id, content: text }]);
-
-  if (error) {
-    console.error("Erro ao comentar:", error.message);
-    alert("Erro ao adicionar comentário.");
-  } else {
-    loadComments(postId);
-  }
-}
-window.addComment = addComment;
-
-// Helper para criar um post-card
-function createPostCard({ id, author, avatarInitial, content, created_at }) {
-  const div = document.createElement("div");
-  div.id = `post-${id}`;
-  div.className = "post-card";
-  div.innerHTML = `
-    <div class="post-head">
-      <div class="avatar">${avatarInitial}</div>
-      <strong>${author}</strong>
-      <small>${new Date(created_at).toLocaleString()}</small>
-    </div>
-    <div class="post-body">${content}</div>
-    <div class="post-actions">
-      <button class="btn-gradient" onclick="togglePostOpen('${id}')">Ver / Comentários</button>
-    </div>
-    <div class="comments" id="comments-${id}" style="display:none"></div>
-  `;
-  return div;
-}
-
-// Expandir post
+// === Expandir post + comentários ===
 function togglePostOpen(postId) {
   const el = document.getElementById(`post-${postId}`);
   const comments = document.getElementById(`comments-${postId}`);
@@ -221,7 +153,7 @@ async function renderComments(postId) {
   const container = document.getElementById(`comments-${postId}`);
   container.innerHTML = "";
 
-  data.forEach(c => {
+  data.forEach((c) => {
     const div = document.createElement("div");
     div.className = "comment";
     div.innerHTML = `
@@ -252,11 +184,9 @@ async function addComment(postId) {
     return;
   }
 
-  const { error } = await supabase.from("comments").insert({
-    post_id: postId,
-    user_id: user.id,
-    content
-  });
+  const { error } = await supabase
+    .from("comments")
+    .insert({ post_id: postId, user_id: user.id, content });
 
   if (error) {
     console.error("Erro ao comentar:", error.message);
@@ -268,10 +198,8 @@ async function addComment(postId) {
 }
 window.addComment = addComment;
 
-
-
-// === Denunciar usuário ou post ===
-async function reportPost(postId, reason="Inapropriado") {
+// === Denunciar post ===
+async function reportPost(postId, reason = "Inapropriado") {
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) return alert("Você precisa estar logado para denunciar.");
 
@@ -287,7 +215,6 @@ async function reportPost(postId, reason="Inapropriado") {
   }
 }
 window.reportPost = reportPost;
-
 
 // === Logout ===
 async function logout() {
