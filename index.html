@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Homestuck — Tradução de Fã (Orion)</title>
+<title>Homestuck — Tradução de Fã </title>
 
 
 
@@ -23,35 +23,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-<header>
-  <div class="brand-left">
-    <div>
-      <div class="logo">HOMESTUCK</div>
-      <div class="subtitle logo-sub">TRADUÇÃO DE FÃ — ORION</div>
-    </div>
-  </div>
+<header class="site-header">
+  <div class="logo">HOMESTUCK <span>TRADUÇÃO DE FÃ </span></div>
 
-  <nav class="tabs" aria-label="Navegação principal">
-    <div class="tab" role="button" onclick="openTab('ler')">LER</div>
-    <div class="tab" role="button" onclick="openTab('traducao')">TRADUÇÃO</div>
-    <div class="tab" role="button" onclick="openTab('conquistas')">CONQUISTAS</div>
-    <div class="tab" role="button" onclick="openTab('data')">DATA</div>
-    <div class="tab" role="button" onclick="openTab('temas')">TEMAS</div>
+  <nav class="main-nav">
+    <button onclick="openTab('readPanel')">LER</button>
+    <button onclick="openTab('translationPanel')">TRADUÇÃO</button>
+    <button onclick="openTab('achievementsPanel')">CONQUISTAS</button>
+    <button onclick="openTab('dataPanel')">DATA</button>
+    <button onclick="openTab('forumPanel')">FÓRUM</button>
   </nav>
 
-  <div class="user-area">
-    <div style="display:flex;flex-direction:column;align-items:flex-end">
-      <div style="display:flex;gap:8px;align-items:center">
-        <div class="user-avatar" id="userAvatar">U</div>
-        <div id="headerUser">Convidado</div>
-      </div>
-      <div style="margin-top:6px">
-      <button class="btn-small" id="loginWithDiscord">Entrar com Discord</button>
-        <button class="btn-small" id="signOutBtn" style="display:none">Sair</button>
-      </div>
-    </div>
+  <div class="user-menu">
+    <div id="userAvatar" class="avatar">U</div>
+    <span id="headerUser">Convidado</span>
+    <button id="loginWithDiscord" class="btn-login">Entrar com Discord</button>
+    <button onclick="logout()" class="btn-logout" style="display:none;">Sair</button>
   </div>
 </header>
+
 
 <main class="container" id="app">
   <section>
