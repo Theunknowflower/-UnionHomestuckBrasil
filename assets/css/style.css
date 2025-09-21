@@ -289,3 +289,30 @@ header{background:var(--verde);padding:14px;color:var(--branco);display:flex;ali
 /* segurança visual para modal-inner quando conteúdo branco */
 .modal-inner * { color: inherit; }
 
+.reader-controls {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0;
+}
+
+.reader-controls button {
+  background: var(--verde);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.reader-controls button:hover {
+  background: #1b5e20;
+}
+
+.reader-iframe {
+  width: 100%;
+  height: 70vh;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
