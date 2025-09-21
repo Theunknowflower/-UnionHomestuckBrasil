@@ -331,17 +331,7 @@ document.getElementById("profileForm")?.addEventListener("submit", async (e) => 
   }
 });
 
-// === Modal helpers ===
-function openModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.setAttribute("aria-hidden", "false");
-}
-function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.setAttribute("aria-hidden", "true");
-}
-window.openModal = openModal;
-window.closeModal = closeModal;
+
 
 // === Profile Modal ===
 async function openProfile(userId) {
@@ -458,28 +448,53 @@ async function loadThemes() {
 // Carregar automaticamente
 document.addEventListener("DOMContentLoaded", loadThemes);
 
-// banco/dados comic
-
+// Banco/dados comic
 let currentPageIndex = 0;
-let pages =.from("pages").select("url") // 🔹 você vai puxar isso do banco futuramente (data/pages)
+let pages = []; // inicia vazio
+
+// Busca páginas no Supabase
+async function loadPages() {
+  const { data, error } = await supabase
+    .from("pages")
+    .select("id, slug, content_json")
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao carregar páginas:", error.message);
+    return;
+  }
+
+  pages = data;
+  currentPageIndex = 0;
+  renderPage();
+}
 
 function renderPage() {
   if (!pages.length) return;
   const frame = document.getElementById("readerFrame");
-  frame.innerHTML = `<iframe src="${pages[currentPageIndex]}" class="reader-iframe"></iframe>`;
+
+  // conteúdo pode ser URL de embed ou JSON estruturado
+  const page = pages[currentPageIndex];
+  if (page.content_json?.url) {
+    frame.innerHTML = `<iframe src="${page.content_json.url}" class="reader-iframe"></iframe>`;
+  } else {
+    frame.innerHTML = `<div class="page-text">${JSON.stringify(page.content_json)}</div>`;
+  }
 }
 
-document.getElementById("prevPageBtn").addEventListener("click", () => {
+document.getElementById("prevPageBtn")?.addEventListener("click", () => {
   if (currentPageIndex > 0) {
     currentPageIndex--;
     renderPage();
   }
 });
 
-document.getElementById("nextPageBtn").addEventListener("click", () => {
+document.getElementById("nextPageBtn")?.addEventListener("click", () => {
   if (currentPageIndex < pages.length - 1) {
     currentPageIndex++;
     renderPage();
   }
 });
 
+// Carrega ao iniciar
+document.addEventListener("DOMContentLoaded", loadPages);
