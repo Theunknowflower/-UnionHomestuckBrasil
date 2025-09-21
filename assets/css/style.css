@@ -248,37 +248,44 @@ header{background:var(--verde);padding:14px;color:var(--branco);display:flex;ali
   background: #f8f8f8;
   padding: 12px;
   border-radius: 8
+/* ===== MODAL (ÚNICO, definitivo) ===== */
 .modal {
-  display: none; /* escondido por padrão */
+  display: none;               /* escondido por padrão */
   position: fixed;
-  inset: 0;
+  inset: 0;                    /* top:0; right:0; bottom:0; left:0 */
   background: rgba(0,0,0,0.6);
-  z-index: 1000;
+  z-index: 9999;
   align-items: center;
   justify-content: center;
 }
 
 .modal[aria-hidden="false"] {
-  display: flex; /* só abre quando o JS ativa */
+  display: flex;               /* só mostra quando aria-hidden = "false" */
 }
 
 .modal-inner {
   position: relative;
   background: #111;
-  padding: 20px;
+  color: #fff;
+  padding: 18px;
   border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  max-width: 920px;
+  width: 92%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
 }
 
+/* botão fechar dentro do modal */
 .modal-close {
   position: absolute;
-  top: 10px; right: 14px;
+  top: 10px;
+  right: 12px;
   background: none;
   border: none;
-  color: white;
+  color: #fff;
   font-size: 20px;
   cursor: pointer;
 }
+
+/* segurança visual para modal-inner quando conteúdo branco */
+.modal-inner * { color: inherit; }
+
