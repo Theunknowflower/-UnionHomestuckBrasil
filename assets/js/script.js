@@ -96,6 +96,35 @@ async function renderPosts() {
   });
 }
 
+
+
+
+// === Criar novo post ===
+const publishBtn = document.getElementById("publishPostBtn");
+if (publishBtn) {
+  publishBtn.addEventListener("click", async () => {
+    const textarea = document.getElementById("newPostContent");
+    const content = textarea.value.trim();
+    if (!content) return alert("Escreva algo!");
+
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return alert("Você precisa estar logado para postar.");
+
+    const { error } = await supabase
+      .from("posts")
+      .insert([{ content, user_id: user.id }]);
+
+    if (error) {
+      console.error("Erro ao criar post:", error.message);
+      alert("Erro ao publicar post.");
+    } else {
+      textarea.value = "";
+      closeModal("newPostModal");
+      renderPosts();
+    }
+  });
+}
+
 function togglePostOpen(postId) {
   const commentsEl = document.getElementById(`comments-${postId}`);
   if (!commentsEl) return;
@@ -124,6 +153,24 @@ async function loadComments(postId) {
     </div>
   `).join("");
 }
+
+// === Adicionar comentário ===
+async function addComment(postId, text) {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return alert("Você precisa estar logado para comentar.");
+
+  const { error } = await supabase
+    .from("comments")
+    .insert([{ post_id: postId, user_id: user.id, content: text }]);
+
+  if (error) {
+    console.error("Erro ao comentar:", error.message);
+    alert("Erro ao adicionar comentário.");
+  } else {
+    loadComments(postId);
+  }
+}
+window.addComment = addComment;
 
 // Helper para criar um post-card
 function createPostCard({ id, author, avatarInitial, content, created_at }) {
@@ -220,3 +267,33 @@ async function addComment(postId) {
   renderComments(postId);
 }
 window.addComment = addComment;
+
+
+
+// === Denunciar usuário ou post ===
+async function reportPost(postId, reason="Inapropriado") {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return alert("Você precisa estar logado para denunciar.");
+
+  const { error } = await supabase
+    .from("reports")
+    .insert([{ reporter: user.id, post_id: postId, reason }]);
+
+  if (error) {
+    console.error("Erro ao denunciar:", error.message);
+    alert("Erro ao enviar denúncia.");
+  } else {
+    alert("Denúncia enviada para os administradores.");
+  }
+}
+window.reportPost = reportPost;
+
+
+// === Logout ===
+async function logout() {
+  await supabase.auth.signOut();
+  document.getElementById("headerUser").innerText = "Convidado";
+  document.getElementById("userAvatar").innerText = "U";
+  alert("Você saiu da conta.");
+}
+window.logout = logout;
