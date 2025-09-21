@@ -401,6 +401,62 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// === CARREGAR TEMAS DO BANCO (Orion) ===
+async function loadThemes() {
+  const themeList = document.getElementById("themeList");
+  if (!themeList) return;
+
+  themeList.innerHTML = "<p>Carregando temas...</p>";
+
+  const { data, error } = await supabase
+    .from("settings")
+    .select("id, value")
+    .eq("key", "theme");
+
+  if (error) {
+    console.error("Erro ao carregar temas:", error.message);
+    themeList.innerHTML = "<p>Erro ao carregar temas.</p>";
+    return;
+  }
+
+  themeList.innerHTML = "";
+
+  (data || []).forEach((row) => {
+    let theme;
+    try {
+      theme = JSON.parse(row.value);
+    } catch (e) {
+      return;
+    }
+
+    const btn = document.createElement("button");
+    btn.className = "btn-theme";
+    btn.textContent = theme.name || "Tema";
+    btn.style.background = theme.bgColor || "#444";
+    btn.style.color = theme.color || "#fff";
+
+    if (theme.bgImage) {
+      btn.style.backgroundImage = `url(${theme.bgImage})`;
+      btn.style.backgroundSize = "cover";
+      btn.style.backgroundPosition = "center";
+    }
+
+    // Preview on hover
+    btn.addEventListener("mouseenter", () => applyTheme(theme));
+    btn.addEventListener("mouseleave", () => {
+      const saved = localStorage.getItem("selectedTheme");
+      if (saved) applyTheme(JSON.parse(saved));
+    });
+
+    // Aplicar definitivo
+    btn.addEventListener("click", () => applyTheme(theme));
+
+    themeList.appendChild(btn);
+  });
+
+
+// Carregar automaticamente
+document.addEventListener("DOMContentLoaded", loadThemes);
 
 // banco/dados comic
 
