@@ -299,3 +299,57 @@ document.addEventListener("DOMContentLoaded", () => {
   refreshUIOnAuth();
   setTimeout(() => renderPosts(), 300);
 });
+
+// user etc
+
+async function sendFriendRequest(targetUserId) {
+  const { error } = await supabase.from("friend_requests").insert({
+    sender: (await supabase.auth.getUser()).data.user.id,
+    receiver: targetUserId,
+  });
+  if (error) console.error("Erro ao enviar amizade:", error);
+  else alert("Pedido de amizade enviado!");
+}
+
+// likes
+
+async function likePost(postId) {
+  const userId = (await supabase.auth.getUser()).data.user.id;
+  const { error } = await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
+  if (error) console.error("Erro ao curtir:", error);
+}
+
+async function getTopPosts() {
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id, content, created_at, post_likes(count)")
+    .order("post_likes.count", { ascending: false });
+  return data;
+}
+
+// conquistas
+
+create or replace function award_comment_achievement()
+returns trigger as $$
+begin
+  if (select count(*) from comments where user_id = new.user_id) >= 10 then
+    insert into user_achievements(user_id, achievement_id)
+    values (new.user_id, '<uuid-da-conquista>')
+    on conflict do nothing;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trg_award_comment after insert on comments
+for each row execute procedure award_comment_achievement();
+
+
+// progresso de leitura
+
+async function savePage(pageId) {
+  const userId = (await supabase.auth.getUser()).data.user.id;
+  await supabase.from("progress").upsert({ user_id: userId, page_id: pageId });
+  alert("Página salva!");
+}
+
