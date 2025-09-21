@@ -446,3 +446,14 @@ window.openProfile = openProfile;
 supabase.auth.onAuthStateChange((event, session) => {
   if (session?.user) loadProfile();
 });
+  function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.setAttribute("aria-hidden", "false");
+}
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.setAttribute("aria-hidden", "true");
+}
+window.openModal = openModal;
+window.closeModal = closeModal;
+
