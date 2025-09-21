@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Homestuck — Tradução de Fã</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- Provide your SUPABASE_URL and SUPABASE_ANON_KEY here before deploying -->
+  <script>
+    window.SUPABASE_URL = window.SUPABASE_URL || "";
+    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  </script>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-area">
+      <img src="assets/Homestuck Logo Placeholder.png" alt="Homestuck" class="logo-img" />
+      <div class="brand-text">HOMESTUCK — TRADUÇÃO DE FÃ</div>
+    </div>
+
+    <nav class="main-nav" aria-label="principal">
+      <button class="nav-btn" data-tab="ler">LER</button>
+      <button class="nav-btn" data-tab="traducao">TRADUÇÃO</button>
+      <button class="nav-btn" data-tab="conquistas">CONQUISTAS</button>
+      <button class="nav-btn" data-tab="data">DATA</button>
+      <button class="nav-btn" data-tab="forum">FÓRUM</button>
+      <button id="openThemeModalBtn" class="nav-btn small">TEMA</button>
+    </nav>
+
+    <div class="user-area">
+      <div id="userAvatar" class="avatar">U</div>
+      <div id="headerUser">Convidado</div>
+      <div class="user-actions">
+        <button id="loginWithDiscord" class="btn-login">Entrar com Discord</button>
+        <button id="logoutBtn" class="btn-logout" style="display:none">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="ler" class="panel active">
+      <h2>Ler — Página atual</h2>
+      <div id="readerWrap" class="reader-wrap">
+        <div id="readerFrame" class="reader-frame">
+          <div class="reader-placeholder">Nenhuma página carregada</div>
+        </div>
+      </div>
+      <div class="reader-controls">
+        <button id="prevPageBtn" class="btn-small">◀ Anterior</button>
+        <button id="nextPageBtn" class="btn-main">Próxima ▶</button>
+        <button id="openDataBtn" class="btn-small">📅 Data</button>
+      </div>
+    </section>
+
+    <section id="traducao" class="panel">
+      <h2>Tradução — Informações do Projeto</h2>
+      <div class="info-box">
+        <p><strong>Equipe:</strong> Rafa + Comunidade</p>
+        <p><strong>Status:</strong> Ato 1 — em progresso</p>
+      </div>
+    </section>
+
+    <section id="conquistas" class="panel">
+      <h2>Conquistas & Fanartes</h2>
+      <div id="achievementsList" class="forum-list"></div>
+    </section>
+
+    <section id="data" class="panel">
+      <h2>Data — Índice de páginas</h2>
+      <div id="indexList" class="post"></div>
+    </section>
+
+    <section id="forum" class="panel">
+      <h2>Fórum</h2>
+      <div style="margin-bottom:10px">
+        <button id="openNewPostBtn" class="btn-main">Novo Post</button>
+      </div>
+      <div id="forumList" class="forum-list"></div>
+    </section>
+
+    <aside class="side-section">
+      <div class="info-box">
+        <h4>Informações do Projeto</h4>
+        <p>Trabalho de fã — sem fins lucrativos.</p>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modals -->
+  <div id="newPostModal" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <button class="modal-close" data-close="newPostModal">✕</button>
+      <h3>Novo post</h3>
+      <textarea id="newPostContent" placeholder="Escreva sua postagem..." rows="6"></textarea>
+      <div style="margin-top:8px"><button id="publishPostBtn" class="btn-main">Publicar</button></div>
+    </div>
+  </div>
+
+  <div id="themeModal" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <button class="modal-close" data-close="themeModal">✕</button>
+      <h3>Escolher Tema</h3>
+      <div id="themeList" class="theme-buttons"></div>
+
+      <div id="adminThemeCreator" style="margin-top:12px; display:none">
+        <h4>Criar novo tema (admin)</h4>
+        <input id="themeName" placeholder="Nome do tema" />
+        <input id="themeColor" type="color" value="#2e7d32" />
+        <input id="themeBgColor" type="color" value="#ffffff" />
+        <input id="themeBgImage" placeholder="URL imagem de fundo (opcional)" />
+        <button id="createThemeBtn" class="btn-main">Criar Tema</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profileModal" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <button class="modal-close" data-close="profileModal">✕</button>
+      <div id="profileDetails"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/script.js"></script>
+</body>
+</html>
