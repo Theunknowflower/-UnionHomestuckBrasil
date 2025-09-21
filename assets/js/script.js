@@ -14,7 +14,8 @@ if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
-      options: { redirectTo: window.location.origin }
+     options: { redirectTo: window.location.origin + "/UnionHomestuckBrasil" }
+
     });
     if (error) console.error("Erro login Discord:", error.message);
   });
