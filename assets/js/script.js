@@ -353,3 +353,21 @@ async function savePage(pageId) {
   alert("Página salva!");
 }
 
+
+//Dom
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("loginWithDiscord");
+  if (!btn) {
+    console.error("Botão Discord Login não encontrado");
+    return;
+  }
+  btn.addEventListener("click", async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) console.error("Erro login Discord:", error.message);
+  });
+});
+
