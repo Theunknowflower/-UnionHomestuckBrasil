@@ -288,7 +288,10 @@ document.getElementById('createThemeBtn')?.addEventListener('click', async () =>
     bgColor: document.getElementById('themeBgColor')?.value || '#000',
     bgImage: document.getElementById('themeBgImage')?.value || ''
   };
-  const { error } = await supabase.from('settings').insert([{ key:'theme', value: JSON.stringify(theme) }]);
+const { error } = await supabase.from("settings").insert([
+  { key: "theme", value: theme }
+]);
+
   if (error) return alert('Erro ao salvar tema');
   loadThemes();
 });
