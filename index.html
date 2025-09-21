@@ -119,6 +119,26 @@
   </div>
 </div>
 
+
+commentsEl.innerHTML = `
+  <div style="margin-bottom:8px">
+    <input id="newComment-${postId}" placeholder="Escreva um comentário..." style="width:80%">
+    <button class="btn-gradient" onclick="addComment('${postId}', document.getElementById('newComment-${postId}').value)">Comentar</button>
+  </div>
+  ${comments.map(c => `
+    <div class="comment">
+      <strong>${c.profiles?.display_name || "Usuário"}</strong>: ${c.content}
+      <small>${new Date(c.created_at).toLocaleString()}</small>
+    </div>
+  `).join("")}
+`;
+
+
+
+  <button class="btn-gradient" onclick="reportPost('${p.id}')">🚩 Denunciar</button>
+
+  <button class="btn-small" onclick="logout()">Sair</button>
+
 <script src="assets/js/script.js"></script>
 </body>
 </html>
