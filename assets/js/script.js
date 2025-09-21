@@ -70,7 +70,6 @@ document.addEventListener('pointerdown', (e) => {
   b.addEventListener('pointerup', remove);
   b.addEventListener('pointerleave', remove);
 });
-
 async function renderPosts() {
   const { data: posts, error } = await supabase
     .from("posts")
@@ -86,16 +85,102 @@ async function renderPosts() {
   forumList.innerHTML = "";
 
   posts.forEach(p => {
-    const card = createPostCard({
-      id: p.id,
-      author: p.author?.display_name || "Usuário",
-      avatarInitial: (p.author?.display_name || "U")[0].toUpperCase(),
-      content: p.content,
-      created_at: p.created_at
-    });
+    const card = document.createElement("div");
+    card.className = "post-card";
+    card.id = `post-${p.id}`;
+    card.innerHTML = `
+      <div class="post-head">
+        <div class="avatar">${(p.author?.display_name || "U")[0]}</div>
+        <div class="author">${p.author?.display_name || "Usuário"}</div>
+        <div class="date">${new Date(p.created_at).toLocaleString()}</div>
+      </div>
+      <div class="post-body">${p.content}</div>
+      <div class="post-actions">
+        <button class="btn-gradient" onclick="togglePostOpen('${p.id}')">Ver Comentários</button>
+        <button class="btn-small" onclick="openCommentBox('${p.id}')">Comentar</button>
+      </div>
+      <div class="comments" id="comments-for-${p.id}" style="display:none"></div>
+    `;
     forumList.appendChild(card);
+
+    // renderizar comentários para cada post
+    renderComments(p.id);
   });
 }
+// Mostrar/esconder comentários de um post
+function togglePostOpen(postId) {
+  const el = document.getElementById(`comments-for-${postId}`);
+  if (!el) return;
+  el.style.display = (el.style.display === "none") ? "block" : "none";
+}
+
+// Caixa de comentário
+function openCommentBox(postId) {
+  const el = document.getElementById(`comments-for-${postId}`);
+  if (!el) return;
+
+  // se já tiver caixa aberta, não duplica
+  if (el.querySelector(".comment-box")) return;
+
+  const box = document.createElement("div");
+  box.className = "comment-box";
+  box.innerHTML = `
+    <textarea id="comment-input-${postId}" placeholder="Escreva um comentário..."></textarea>
+    <button class="btn-main" onclick="addComment('${postId}')">Enviar</button>
+  `;
+  el.prepend(box);
+}
+
+// Buscar comentários de um post
+async function renderComments(postId) {
+  const { data: comments, error } = await supabase
+    .from("comments")
+    .select("id, content, created_at, author:profiles(display_name)")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao carregar comentários:", error.message);
+    return;
+  }
+
+  const el = document.getElementById(`comments-for-${postId}`);
+  if (!el) return;
+
+  el.innerHTML = comments.map(c => `
+    <div class="comment">
+      <strong>${c.author?.display_name || "Usuário"}</strong>: ${c.content}
+      <small>${new Date(c.created_at).toLocaleString()}</small>
+    </div>
+  `).join("");
+}
+
+// Inserir novo comentário
+async function addComment(postId) {
+  const textarea = document.getElementById(`comment-input-${postId}`);
+  if (!textarea) return;
+  const content = textarea.value.trim();
+  if (!content) return;
+
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) {
+    alert("Você precisa estar logado!");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("comments")
+    .insert([{ post_id: postId, user_id: user.id, content }]);
+
+  if (error) {
+    console.error("Erro ao comentar:", error.message);
+    return;
+  }
+
+  textarea.value = "";
+  renderComments(postId);
+}
+
 
 
 async function addPost(content) {
