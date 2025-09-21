@@ -9,12 +9,35 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 console.log("Orion script loaded ✅");
 
 
+const loginBtn = document.getElementById("loginWithDiscord");
+const logoutBtn = document.getElementById("logoutBtn");
+const headerUser = document.getElementById("headerUser");
+const avatar = document.getElementById("userAvatar");
 
-// Escuta sessão e atualiza UI
+// Login
+if (loginBtn) {
+  loginBtn.addEventListener("click", async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo: window.location.origin + "/UnionHomestuckBrasil" }
+    });
+    if (error) console.error("Erro login Discord:", error.message);
+  });
+}
+
+// Logout
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    headerUser.innerText = "Convidado";
+    avatar.innerText = "U";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  });
+}
+
+// Sessão
 supabase.auth.onAuthStateChange(async (event, session) => {
-  const headerUser = document.getElementById("headerUser");
-  const avatar = document.getElementById("userAvatar");
-
   if (session?.user) {
     let displayName =
       session.user.user_metadata.full_name ||
@@ -22,9 +45,14 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
     headerUser.innerText = displayName;
     avatar.innerText = displayName[0].toUpperCase();
+
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
   } else {
     headerUser.innerText = "Convidado";
     avatar.innerText = "U";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
   }
 });
 
