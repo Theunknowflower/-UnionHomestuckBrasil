@@ -8,13 +8,12 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log("Orion script loaded ✅");
 
-
 const loginBtn = document.getElementById("loginWithDiscord");
 const logoutBtn = document.getElementById("logoutBtn");
 const headerUser = document.getElementById("headerUser");
 const avatar = document.getElementById("userAvatar");
 
-// Login
+// === Login ===
 if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -25,7 +24,7 @@ if (loginBtn) {
   });
 }
 
-// Logout
+// === Logout ===
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     await supabase.auth.signOut();
@@ -36,16 +35,14 @@ if (logoutBtn) {
   });
 }
 
-// Sessão
+// === Sessão ===
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (session?.user) {
     let displayName =
       session.user.user_metadata.full_name ||
       session.user.email.split("@")[0];
-
     headerUser.innerText = displayName;
     avatar.innerText = displayName[0].toUpperCase();
-
     loginBtn.style.display = "none";
     logoutBtn.style.display = "inline-block";
   } else {
@@ -56,7 +53,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// === FUNÇÃO openTab (corrige menus) ===
+// === Tabs ===
 function openTab(tabId) {
   document.querySelectorAll(".panel").forEach(
     (p) => (p.style.display = "none")
@@ -66,7 +63,7 @@ function openTab(tabId) {
 }
 window.openTab = openTab;
 
-// === FORUM SIDEBAR ===
+// === Sidebar Fórum ===
 function toggleForumSidebar() {
   const sidebar = document.getElementById("forumSidebar");
   if (!sidebar) return;
@@ -96,7 +93,7 @@ async function renderPosts() {
   const forumList = document.getElementById("forumList");
   forumList.innerHTML = "";
 
-  posts.forEach((p) => {
+  posts.forEach(p => {
     const card = document.createElement("div");
     card.className = "post-card";
     card.id = `post-${p.id}`;
@@ -112,6 +109,7 @@ async function renderPosts() {
       </div>
       <div class="comments" id="comments-${p.id}" style="display:none"></div>
     `;
+
     forumList.appendChild(card);
   });
 }
@@ -155,11 +153,11 @@ function togglePostOpen(postId) {
 }
 window.togglePostOpen = togglePostOpen;
 
-// === COMENTÁRIOS ===
+// === Renderizar comentários ===
 async function renderComments(postId) {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, user_id, user:profiles(display_name)")
+    .select("id, content, created_at, user:profiles(display_name)")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
 
@@ -182,7 +180,7 @@ async function renderComments(postId) {
     container.appendChild(div);
   });
 
-  // form p/ comentar
+  // form para comentar
   const form = document.createElement("div");
   form.innerHTML = `
     <textarea id="commentInput-${postId}" placeholder="Escreva um comentário..."></textarea>
@@ -191,6 +189,7 @@ async function renderComments(postId) {
   container.appendChild(form);
 }
 
+// === Adicionar comentário ===
 async function addComment(postId) {
   const input = document.getElementById(`commentInput-${postId}`);
   const content = input.value.trim();
@@ -202,12 +201,15 @@ async function addComment(postId) {
     return;
   }
 
-  const { error } = await supabase
-    .from("comments")
-    .insert({ post_id: postId, user_id: user.id, content });
+  const { error } = await supabase.from("comments").insert({
+    post_id: postId,   // ✅ agora usa o UUID real do post
+    user_id: user.id,
+    content
+  });
 
   if (error) {
     console.error("Erro ao comentar:", error.message);
+    alert("Erro ao comentar.");
     return;
   }
 
@@ -234,28 +236,7 @@ async function reportPost(postId, reason = "Inapropriado") {
 }
 window.reportPost = reportPost;
 
-supabase.auth.onAuthStateChange(async (event, session) => {
-  const headerUser = document.getElementById("headerUser");
-  const avatar = document.getElementById("userAvatar");
-  const loginBtn = document.getElementById("loginWithDiscord");
-  options: { redirectTo: window.location.origin + "/UnionHomestuckBrasil" }
-  const logoutBtn = document.querySelector(".btn-logout");
-
-  if (session?.user) {
-    let displayName = session.user.user_metadata.full_name 
-                   || session.user.email.split("@")[0];
-    headerUser.innerText = displayName;
-    avatar.innerText = displayName[0].toUpperCase();
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-  } else {
-    headerUser.innerText = "Convidado";
-    avatar.innerText = "U";
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-  }
-});
-// === PERFIL DE USUÁRIO ===
+// === Perfil de Usuário ===
 async function loadProfile() {
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) return;
@@ -271,19 +252,13 @@ async function loadProfile() {
     return;
   }
 
-  // Atualiza UI
   document.getElementById("profileName").innerText = data?.display_name || "Usuário";
   document.getElementById("profileEmail").innerText = user.email;
   document.getElementById("profileAvatar").style.backgroundImage = data?.avatar_url ? `url(${data.avatar_url})` : "none";
   document.getElementById("profileBanner").style.backgroundImage = data?.banner_url ? `url(${data.banner_url})` : "none";
-
-  // Preenche formulário
-  document.getElementById("displayNameInput").value = data?.display_name || "";
-  document.getElementById("avatarUrlInput").value = data?.avatar_url || "";
-  document.getElementById("bannerUrlInput").value = data?.banner_url || "";
 }
 
-// === Salvar perfil ===
+// Salvar perfil
 document.getElementById("profileForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const user = (await supabase.auth.getUser()).data.user;
@@ -297,9 +272,7 @@ document.getElementById("profileForm")?.addEventListener("submit", async (e) => 
     updated_at: new Date()
   };
 
-  const { error } = await supabase
-    .from("profiles")
-    .upsert(updates);
+  const { error } = await supabase.from("profiles").upsert(updates);
 
   if (error) {
     console.error("Erro ao salvar perfil:", error.message);
@@ -309,140 +282,20 @@ document.getElementById("profileForm")?.addEventListener("submit", async (e) => 
     loadProfile();
   }
 });
-// === THEME MODULE (ORION SAFE BLOCK) ===
-(function(){
-  if (window.__orion_theme_registered) return;
-  window.__orion_theme_registered = true;
 
-  // helpers
-  function el(id){ return document.getElementById(id); }
+// === Modal helpers ===
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.setAttribute("aria-hidden", "false");
+}
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.setAttribute("aria-hidden", "true");
+}
+window.openModal = openModal;
+window.closeModal = closeModal;
 
-  // modal helpers (definem closeModal/openModal se não existirem)
-  window.openModal = window.openModal || function(id){
-    const m = el(id);
-    if (!m) return;
-    m.setAttribute('aria-hidden','false');
-    m.style.display = 'flex';
-  };
-  window.closeModal = window.closeModal || function(id){
-    const m = el(id);
-    if (!m) return;
-    m.setAttribute('aria-hidden','true');
-    m.style.display = 'none';
-  };
-
-  // Aplica tema (salva escolha no localStorage)
-  function applyTheme(theme){
-    if (!theme) return;
-    if (theme.bgImage) {
-      document.body.style.background = `url(${theme.bgImage}) center/cover fixed`;
-      document.body.style.backgroundSize = 'cover';
-    } else {
-      document.body.style.background = theme.bgColor || '';
-      document.body.style.backgroundSize = '';
-    }
-    document.documentElement.style.setProperty('--main-color', theme.color || '');
-    try { localStorage.setItem('selectedTheme', JSON.stringify(theme)); } catch(e){}
-  }
-  window.applyTheme = applyTheme;
-
-  // Carrega temas da tabela settings (key='theme')
-  async function loadThemes(){
-    const themeList = el('themeList');
-    if (!themeList) return;
-    themeList.innerHTML = '<div>Carregando temas...</div>';
-    const { data, error } = await supabase.from('settings').select('id,value').eq('key','theme');
-    if (error) {
-      console.error('Erro ao carregar temas:', error);
-      themeList.innerHTML = '<div>Erro ao carregar temas</div>';
-      return;
-    }
-    themeList.innerHTML = '';
-    (data || []).forEach(row => {
-      let theme;
-      try { theme = JSON.parse(row.value); } catch(e){ return; }
-      const btn = document.createElement('button');
-      btn.className = 'btn-theme';
-      btn.textContent = theme.name || 'Tema';
-      if (theme.bgImage) {
-        btn.style.backgroundImage = `url(${theme.bgImage})`;
-        btn.style.backgroundSize = 'cover';
-        btn.style.backgroundPosition = 'center';
-      } else {
-        btn.style.background = theme.bgColor || '#444';
-      }
-      btn.style.color = theme.color || '#fff';
-
-      btn.addEventListener('mouseenter', () => applyTheme(theme)); // preview
-      btn.addEventListener('mouseleave', () => {
-        const saved = localStorage.getItem('selectedTheme');
-        if (saved) try { applyTheme(JSON.parse(saved)); } catch(e){ document.body.style.background = ''; document.documentElement.style.removeProperty('--main-color'); }
-        else { document.body.style.background = ''; document.documentElement.style.removeProperty('--main-color'); }
-      });
-      btn.addEventListener('click', () => applyTheme(theme)); // apply permanently (until changed)
-      themeList.appendChild(btn);
-    });
-
-    // show admin creator if admin (fetch profile.role)
-    try {
-      const { data: udata } = await supabase.auth.getUser();
-      const user = udata?.user;
-      if (user) {
-        const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        if (prof?.role === 'admin') {
-          const adminEl = el('adminThemeCreator');
-          if (adminEl) adminEl.style.display = 'block';
-        }
-      }
-    } catch (e) { console.warn('checkIfAdmin failed', e); }
-
-    // apply saved theme (user preference)
-    try {
-      const saved = localStorage.getItem('selectedTheme');
-      if (saved) applyTheme(JSON.parse(saved));
-    } catch(e){}
-  }
-  window.loadThemes = loadThemes;
-
-  // Criar novo tema (attach safe)
-  function attachCreateThemeHandler(){
-    const btn = el('createThemeBtn');
-    if (!btn) return;
-    // remove previous handlers if any (safe)
-    if (btn._orion_attached) return;
-    btn._orion_attached = true;
-    btn.addEventListener('click', async () => {
-      const name = el('themeName')?.value || 'Tema';
-      const color = el('themeColor')?.value || '#ffffff';
-      const bgColor = el('themeBgColor')?.value || '#000000';
-      const bgImage = el('themeBgImage')?.value || '';
-      const theme = { name, color, bgColor, bgImage };
-      const { error } = await supabase.from('settings').insert([{ key: 'theme', value: JSON.stringify(theme) }]);
-      if (error) {
-        console.error('Erro ao salvar tema:', error);
-        alert('Erro ao salvar tema: ' + (error.message || JSON.stringify(error)));
-      } else {
-        alert('Tema criado!');
-        await loadThemes();
-      }
-    });
-  }
-
-  // iniciadores
-  document.addEventListener('DOMContentLoaded', () => {
-    loadThemes();
-    attachCreateThemeHandler();
-    // garanta que modais iniciem escondidos
-    ['themeModal','profileModal'].forEach(id => {
-      const m = el(id);
-      if (m) { m.setAttribute('aria-hidden','true'); m.style.display = 'none'; }
-    });
-  });
-
-})();
-
-
-// === PROFILE MODAL ===
+// === Profile Modal ===
 async function openProfile(userId) {
   const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
   if (error) {
@@ -457,27 +310,10 @@ async function openProfile(userId) {
       <img class="avatar" src="${data.avatar_url || "default.png"}" alt="">
       <h3>${data.display_name || "Usuário"}</h3>
       <p>Função: ${data.role}</p>
-      <button onclick="sendFriendRequest('${data.id}')">Adicionar amigo</button>
-      <button onclick="reportUser('${data.id}')">Denunciar</button>
     </div>
   `;
 
   openModal("profileModal");
 }
 window.openProfile = openProfile;
-
-// Carrega perfil sempre que o usuário logar
-supabase.auth.onAuthStateChange((event, session) => {
-  if (session?.user) loadProfile();
-});
-  function openModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.setAttribute("aria-hidden", "false");
-}
-function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.setAttribute("aria-hidden", "true");
-}
-window.openModal = openModal;
-window.closeModal = closeModal;
 
