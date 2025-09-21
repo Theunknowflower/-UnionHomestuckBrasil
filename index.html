@@ -1,165 +1,164 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Homestuck — Tradução de Fã</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Homestuck — Tradução de Fã</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
 
-<!-- Supabase config -->
-<script>
-  window.SUPABASE_URL = "https://vhopcdzemdiqtvrwmqqo.supabase.co";
-  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- Supabase config -->
+  <script>
+    window.SUPABASE_URL = "https://vhopcdzemdiqtvrwmqqo.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-<header class="site-header">
-  <div class="logo">HOMESTUCK <span>TRADUÇÃO DE FÃ</span></div>
-
-  <nav class="main-nav">
-    <button onclick="openTab('ler')">LER</button>
-    <button onclick="openTab('traducao')">TRADUÇÃO</button>
-    <button onclick="openTab('conquistas')">CONQUISTAS</button>
-    <button onclick="openTab('data')">DATA</button>
-    <button onclick="openTab('forum')">FÓRUM</button>
-    <button class="btn-small" id="openThemeModal">TEMA</button>
-  </nav>
-
-  <div class="user-menu">
-    <div id="userAvatar" class="avatar">U</div>
-    <span id="headerUser">Convidado</span>
-    <button id="loginWithDiscord" class="btn-login">Entrar com Discord</button>
-    <button id="logoutBtn" class="btn-logout" style="display:none;">Sair</button>
-  </div>
-</header>
-
-<main class="container" id="app">
-  <section>
-    <!-- LER -->
-    <div id="ler" class="panel" style="display:block">
-      <h2>Ler — Página atual</h2>
-      <div class="reader-image" id="readerArea">
-        <img id="readerImg" src="exemplo.png" alt="Painel da comic" />
-        <div class="reader-cta">
-          <button class="btn-main" id="readPageBtn">Ler esta página</button>
-        </div>
-      </div>
+  <header class="site-header">
+    <div class="logo">
+      <img src="https://raw.githubusercontent.com/Theunknowflower/UnionHomestuckBrasil/main/assets/Homestuck%20ACT1/Logo_of_Homestuck.png" alt="Homestuck Tradução de Fã">
     </div>
 
-    <div class="reader-controls">
-      <button id="prevPageBtn">⬅️ Anterior</button>
-      <button id="nextPageBtn">Próxima ➡️</button>
-    </div>
-    <div id="readerFrame"></div>
+    <nav class="main-nav">
+      <button onclick="openTab('ler')">LER</button>
+      <button onclick="openTab('traducao')">TRADUÇÃO</button>
+      <button onclick="openTab('conquistas')">CONQUISTAS</button>
+      <button onclick="openTab('data')">DATA</button>
+      <button onclick="openTab('forum')">FÓRUM</button>
+      <button class="btn-small" id="openThemeModal">TEMA</button>
+    </nav>
 
-    <!-- PERFIL -->
-    <div id="profilePanel" class="panel" style="display:none;">
-      <h2>Meu Perfil</h2>
-      <div class="profile-card">
-        <div class="profile-banner" id="profileBanner"></div>
-        <div class="profile-info">
-          <div class="profile-avatar" id="profileAvatar">U</div>
-          <h3 id="profileName">Usuário</h3>
-          <p id="profileEmail">email@email.com</p>
+    <div class="user-menu">
+      <div id="userAvatar" class="avatar">U</div>
+      <span id="headerUser">Convidado</span>
+      <button id="loginWithDiscord" class="btn-login">Entrar com Discord</button>
+      <button id="logoutBtn" class="btn-logout" style="display:none;">Sair</button>
+    </div>
+  </header>
+
+  <main class="container" id="app">
+    <section>
+      <!-- LER -->
+      <div id="ler" class="panel" style="display:block">
+        <h2>Ler — Página atual</h2>
+        <div class="reader-image" id="readerArea">
+          <img id="readerImg" src="exemplo.png" alt="Painel da comic" />
+          <div class="reader-cta">
+            <button class="btn-main" id="readPageBtn">Ler esta página</button>
+          </div>
         </div>
       </div>
 
-      <h3>Editar Perfil</h3>
-      <form id="profileForm">
-        <label>Nome de Exibição:
-          <input type="text" id="displayNameInput" placeholder="Digite seu nome">
-        </label>
-        <label>URL do Avatar:
-          <input type="text" id="avatarUrlInput" placeholder="https://...">
-        </label>
-        <label>URL do Banner:
-          <input type="text" id="bannerUrlInput" placeholder="https://...">
-        </label>
-        <button type="submit" class="btn-save">Salvar</button>
-      </form>
-    </div>
+      <div class="reader-controls">
+        <button id="prevPageBtn">⬅️ Anterior</button>
+        <button id="nextPageBtn">Próxima ➡️</button>
+      </div>
+      <div id="readerFrame"></div>
 
-    <!-- TRADUÇÃO -->
-    <div id="traducao" class="panel" style="display:none;margin-top:16px">
-      <h2>Tradução — Informações do Projeto</h2>
+      <!-- PERFIL -->
+      <div id="profilePanel" class="panel" style="display:none;">
+        <h2>Meu Perfil</h2>
+        <div class="profile-card">
+          <div class="profile-banner" id="profileBanner"></div>
+          <div class="profile-info">
+            <div class="profile-avatar" id="profileAvatar">U</div>
+            <h3 id="profileName">Usuário</h3>
+            <p id="profileEmail">email@email.com</p>
+          </div>
+        </div>
+
+        <h3>Editar Perfil</h3>
+        <form id="profileForm">
+          <label>Nome de Exibição:
+            <input type="text" id="displayNameInput" placeholder="Digite seu nome">
+          </label>
+          <label>URL do Avatar:
+            <input type="text" id="avatarUrlInput" placeholder="https://...">
+          </label>
+          <label>URL do Banner:
+            <input type="text" id="bannerUrlInput" placeholder="https://...">
+          </label>
+          <button type="submit" class="btn-save">Salvar</button>
+        </form>
+      </div>
+
+      <!-- TRADUÇÃO -->
+      <div id="traducao" class="panel" style="display:none;margin-top:16px">
+        <h2>Tradução — Informações do Projeto</h2>
+        <div class="info-box">
+          <p><strong>Equipe:</strong> Rafa + Comunidade</p>
+          <p><strong>Status:</strong> Ato 1 — em progresso</p>
+          <p><strong>Licença:</strong> Trabalho de fã, sem fins lucrativos. Homestuck © Andrew Hussie</p>
+        </div>
+      </div>
+
+      <!-- CONQUISTAS -->
+      <div id="conquistas" class="panel" style="display:none;margin-top:16px">
+        <h2>Conquistas & Fanartes</h2>
+        <div id="achievementsList"></div>
+      </div>
+
+      <!-- DATA / Fórum -->
+      <div id="data" class="panel" style="display:none;margin-top:16px">
+        <h2>Data — Fórum</h2>
+        <div style="margin-bottom:12px">
+          <button class="btn-main" id="openNewPostBtn">Novo Post</button>
+        </div>
+        <div id="forumList" class="forum-list"></div>
+      </div>
+
+      <!-- TEMAS -->
+      <div id="temas" class="panel" style="display:none;margin-top:16px">
+        <h2>Escolher Tema</h2>
+        <div id="themeList" class="theme-buttons"></div>
+      </div>
+    </section>
+
+    <aside class="side-section">
       <div class="info-box">
+        <h3>Informações do Projeto</h3>
         <p><strong>Equipe:</strong> Rafa + Comunidade</p>
-        <p><strong>Status:</strong> Ato 1 — em progresso</p>
-        <p><strong>Licença:</strong> Trabalho de fã, sem fins lucrativos. Homestuck © Andrew Hussie</p>
+      </div>
+    </aside>
+  </main>
+
+  <!-- MODAIS -->
+
+  <div id="newPostModal" class="modal" aria-hidden="true" style="display:none">
+    <div class="modal-inner">
+      <button class="modal-close" onclick="closeModal('newPostModal')">✕</button>
+      <h3>Novo Post</h3>
+      <textarea id="newPostContent" placeholder="Escreva sua postagem..." style="width:100%;height:120px"></textarea>
+      <div style="margin-top:8px">
+        <button class="btn-main" id="publishPostBtn">Publicar</button>
       </div>
     </div>
+  </div>
 
-    <!-- CONQUISTAS -->
-    <div id="conquistas" class="panel" style="display:none;margin-top:16px">
-      <h2>Conquistas & Fanartes</h2>
-      <div id="achievementsList"></div>
-    </div>
-
-    <!-- DATA / Fórum -->
-    <div id="data" class="panel" style="display:none;margin-top:16px">
-      <h2>Data — Fórum</h2>
-      <div style="margin-bottom:12px">
-        <button class="btn-main" id="openNewPostBtn">Novo Post</button>
+  <div id="themeModal" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <button class="modal-close" onclick="closeModal('themeModal')">✕</button>
+      <h3>Escolher Tema</h3>
+      <div id="themeList"></div>
+      <div id="adminThemeCreator" style="margin-top:12px; display:none">
+        <h4>Criar novo tema</h4>
+        <input type="text" id="themeName" placeholder="Nome do tema">
+        <input type="color" id="themeColor" value="#00ff00">
+        <input type="color" id="themeBgColor" value="#000000">
+        <input type="text" id="themeBgImage" placeholder="URL imagem de fundo (opcional)">
+        <button class="btn-main" id="createThemeBtn">Criar Tema</button>
       </div>
-      <div id="forumList" class="forum-list"></div>
-    </div>
-
-    <!-- TEMAS -->
-    <div id="temas" class="panel" style="display:none;margin-top:16px">
-      <h2>Escolher Tema</h2>
-      <div id="themeList" class="theme-buttons"></div>
-    </div>
-  </section>
-
-  <aside class="side-section">
-    <div class="info-box">
-      <h3>Informações do Projeto</h3>
-      <p><strong>Equipe:</strong> Rafa + Comunidade</p>
-    </div>
-  </aside>
-</main>
-
-<!-- MODAIS -->
-
-<!-- Novo Post -->
-<div id="newPostModal" class="modal" aria-hidden="true" style="display:none">
-  <div class="modal-inner">
-    <button class="modal-close" onclick="closeModal('newPostModal')">✕</button>
-    <h3>Novo Post</h3>
-    <textarea id="newPostContent" placeholder="Escreva sua postagem..." style="width:100%;height:120px"></textarea>
-    <div style="margin-top:8px">
-      <button class="btn-main" id="publishPostBtn">Publicar</button>
     </div>
   </div>
-</div>
 
-<!-- Tema -->
-<div id="themeModal" class="modal" aria-hidden="true">
-  <div class="modal-inner">
-    <button class="modal-close" onclick="closeModal('themeModal')">✕</button>
-    <h3>Escolher Tema</h3>
-    <div id="themeList"></div>
-    <div id="adminThemeCreator" style="margin-top:12px; display:none">
-      <h4>Criar novo tema</h4>
-      <input type="text" id="themeName" placeholder="Nome do tema">
-      <input type="color" id="themeColor" value="#00ff00">
-      <input type="color" id="themeBgColor" value="#000000">
-      <input type="text" id="themeBgImage" placeholder="URL imagem de fundo (opcional)">
-      <button class="btn-main" id="createThemeBtn">Criar Tema</button>
+  <div id="profileModal" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <div id="profileDetails"></div>
     </div>
   </div>
-</div>
 
-<!-- Perfil -->
-<div id="profileModal" class="modal" aria-hidden="true">
-  <div class="modal-inner">
-    <div id="profileDetails"></div>
-  </div>
-</div>
-
-<script src="assets/js/script.js"></script>
+  <script src="assets/js/script.js"></script>
 </body>
-</html>
+  </html>
