@@ -1,27 +1,39 @@
-/ Orion scaffold script - Supabase + UI
+// Orion scaffold script - Supabase + UI
 // ======================================
 
 // === CONFIG SUPABASE ===
 const SUPABASE_URL = window.SUPABASE_URL || "https://vhopcdzemdiqtvrwmqqo.supabase.co";
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
-const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)eateClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log("Orion script loaded ✅");
 
-// === LOGIN DISCORD ===
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("loginWithDiscord");
-  if (btn) {
-    btn.addEventListener("click", async () => {
-      console.log("Botão Discord clicado!");
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "discord",
-        options: { redirectTo: window.location.origin }
-      });
-      if (error) console.error("Erro login Discord:", error.message);
+// === Login com Discord ===
+const loginBtn = document.getElementById("loginWithDiscord");
+if (loginBtn) {
+  loginBtn.addEventListener("click", async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo: window.location.origin }
     });
+    if (error) console.error("Erro login Discord:", error.message);
+  });
+}
+
+// Escuta sessão e atualiza UI
+supabase.auth.onAuthStateChange(async (event, session) => {
+  const headerUser = document.getElementById("headerUser");
+  const avatar = document.getElementById("userAvatar");
+  if (session?.user) {
+    const email = session.user.email || "Usuário";
+    headerUser.innerText = email;
+    avatar.innerText = email[0].toUpperCase();
+  } else {
+    headerUser.innerText = "Convidado";
+    avatar.innerText = "U";
   }
 });
+
 
 // === FUNÇÃO openTab (corrige menus) ===
 function openTab(tabId) {
@@ -49,11 +61,11 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// === POSTS ===
+// === Renderizar posts + expandir comentários ===
 async function renderPosts() {
   const { data: posts, error } = await supabase
     .from("posts")
-    .select("id, content, created_at, author:profiles(display_name)")
+    .select("id, content, created_at, profiles(display_name)")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -65,17 +77,53 @@ async function renderPosts() {
   forumList.innerHTML = "";
 
   posts.forEach(p => {
-    const card = createPostCard({
-      id: p.id,
-      author: p.author?.display_name || "Usuário",
-      avatarInitial: (p.author?.display_name || "U")[0].toUpperCase(),
-      content: p.content,
-      created_at: p.created_at
-    });
+    const card = document.createElement("div");
+    card.className = "post-card";
+    card.id = `post-${p.id}`;
+
+    card.innerHTML = `
+      <div class="post-head">
+        <strong>${p.profiles?.display_name || "Usuário"}</strong>
+        <small>${new Date(p.created_at).toLocaleString()}</small>
+      </div>
+      <div class="post-body">${p.content}</div>
+      <div class="post-actions">
+        <button class="btn-gradient" onclick="togglePostOpen('${p.id}')">💬 Comentários</button>
+      </div>
+      <div class="comments" id="comments-${p.id}" style="display:none"></div>
+    `;
     forumList.appendChild(card);
   });
 }
-window.renderPosts = renderPosts;
+
+function togglePostOpen(postId) {
+  const commentsEl = document.getElementById(`comments-${postId}`);
+  if (!commentsEl) return;
+  const isOpen = commentsEl.style.display === "block";
+  commentsEl.style.display = isOpen ? "none" : "block";
+  if (!isOpen) loadComments(postId);
+}
+
+async function loadComments(postId) {
+  const { data: comments, error } = await supabase
+    .from("comments")
+    .select("content, created_at, profiles(display_name)")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao carregar comentários:", error.message);
+    return;
+  }
+
+  const commentsEl = document.getElementById(`comments-${postId}`);
+  commentsEl.innerHTML = comments.map(c => `
+    <div class="comment">
+      <strong>${c.profiles?.display_name || "Usuário"}</strong>: ${c.content}
+      <small>${new Date(c.created_at).toLocaleString()}</small>
+    </div>
+  `).join("");
+}
 
 // Helper para criar um post-card
 function createPostCard({ id, author, avatarInitial, content, created_at }) {
