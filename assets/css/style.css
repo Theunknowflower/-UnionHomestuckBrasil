@@ -84,3 +84,126 @@ header{background:var(--verde);padding:14px;color:var(--branco);display:flex;ali
 .comment {
   margin-bottom: 6px;
 }
+/* === Layout Geral === */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #035c1a;
+  color: white;
+  padding: 10px 20px;
+}
+
+.site-header .logo {
+  font-family: "Press Start 2P", monospace;
+  font-size: 16px;
+}
+
+.site-header .logo span {
+  display: block;
+  font-size: 10px;
+  font-weight: normal;
+}
+
+.main-nav button {
+  margin: 0 5px;
+  padding: 8px 14px;
+  border: none;
+  background: #0a7f2c;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.main-nav button:hover {
+  background: #0c9e36;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-menu .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ddd;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.btn-login, .btn-logout {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-login {
+  background: #0366d6;
+  color: white;
+}
+
+.btn-login:hover {
+  background: #0250a8;
+}
+
+.btn-logout {
+  background: #c62828;
+  color: white;
+}
+
+.btn-logout:hover {
+  background: #a31414;
+}
+
+/* === Comentários === */
+.comments-section {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8f8f8;
+  border-radius: 8px;
+}
+
+.comments-section h3 {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.comments-list .comment {
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+.comment-form {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  height: 60px;
+  resize: none;
+  padding: 6px;
+}
+
+.comment-form button {
+  align-self: flex-end;
+  padding: 6px 12px;
+  background: #0a7f2c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
