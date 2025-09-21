@@ -309,6 +309,92 @@ document.getElementById("profileForm")?.addEventListener("submit", async (e) => 
     loadProfile();
   }
 });
+// === THEME SYSTEM ===
+const themeModalBtn = document.getElementById("openThemeModal");
+if (themeModalBtn) {
+  themeModalBtn.addEventListener("click", () => {
+    openModal("themeModal");
+    loadThemes();
+  });
+}
+
+// Carregar temas
+async function loadThemes() {
+  const { data, error } = await supabase.from("settings").select("*").eq("key", "theme");
+  const container = document.getElementById("themeList");
+  container.innerHTML = "";
+
+  if (error) {
+    console.error("Erro ao carregar temas:", error.message);
+    return;
+  }
+
+  data.forEach(t => {
+    const theme = JSON.parse(t.value);
+    const btn = document.createElement("button");
+    btn.className = "btn-small";
+    btn.style.background = theme.bgImage ? `url(${theme.bgImage})` : theme.bgColor;
+    btn.style.color = theme.color;
+    btn.innerText = theme.name;
+    btn.onclick = () => applyTheme(theme);
+    container.appendChild(btn);
+  });
+
+  // Se admin -> mostra criador
+  const user = (await supabase.auth.getUser()).data.user;
+  if (user && user.role === "admin") {
+    document.getElementById("adminThemeCreator").style.display = "block";
+  }
+}
+
+// Aplicar tema
+function applyTheme(theme) {
+  document.body.style.background = theme.bgImage ? `url(${theme.bgImage})` : theme.bgColor;
+  document.documentElement.style.setProperty("--main-color", theme.color);
+}
+
+// Criar novo tema (apenas admin)
+const createThemeBtn = document.getElementById("createThemeBtn");
+if (createThemeBtn) {
+  createThemeBtn.addEventListener("click", async () => {
+    const theme = {
+      name: document.getElementById("themeName").value,
+      color: document.getElementById("themeColor").value,
+      bgColor: document.getElementById("themeBgColor").value,
+      bgImage: document.getElementById("themeBgImage").value
+    };
+    const { error } = await supabase.from("settings").insert([{ key: "theme", value: JSON.stringify(theme) }]);
+    if (error) {
+      console.error("Erro ao salvar tema:", error.message);
+    } else {
+      alert("Tema criado!");
+      loadThemes();
+    }
+  });
+}
+// === PROFILE MODAL ===
+async function openProfile(userId) {
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+  if (error) {
+    console.error("Erro ao carregar perfil:", error.message);
+    return;
+  }
+
+  const container = document.getElementById("profileDetails");
+  container.innerHTML = `
+    <div class="profile-banner" style="background:url(${data.banner_url || ""}) center/cover"></div>
+    <div class="profile-info">
+      <img class="avatar" src="${data.avatar_url || "default.png"}" alt="">
+      <h3>${data.display_name || "Usuário"}</h3>
+      <p>Função: ${data.role}</p>
+      <button onclick="sendFriendRequest('${data.id}')">Adicionar amigo</button>
+      <button onclick="reportUser('${data.id}')">Denunciar</button>
+    </div>
+  `;
+
+  openModal("profileModal");
+}
+window.openProfile = openProfile;
 
 // Carrega perfil sempre que o usuário logar
 supabase.auth.onAuthStateChange((event, session) => {
