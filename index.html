@@ -20,27 +20,26 @@
 <body>
 <header class="site-header">
   <div class="logo">
-    <img src="assets/Homestuck ACT1/Logo_of_Homestuck.png" alt="Homestuck logo" id="siteLogo"/>
-    <div>
-      <div class="logo-title">HOMESTUCK</div>
-      <div class="logo-sub">TRADUÇÃO DE FÃ — PROTÓTIPO</div>
-    </div>
+<header class="site-header">
+  <div class="logo">
+    <img src="assets/Homestuck ACT1/Logo_of_Homestuck.png" alt="Homestuck Logo" style="height:80px;">
+    <span>TRADUÇÃO DE FÃ</span>
   </div>
 
-  <nav class="main-nav" aria-label="Navegação principal">
+  <nav class="main-nav">
     <button onclick="openTab('ler')">LER</button>
     <button onclick="openTab('traducao')">TRADUÇÃO</button>
     <button onclick="openTab('conquistas')">CONQUISTAS</button>
     <button onclick="openTab('data')">DATA</button>
     <button onclick="openTab('forum')">FÓRUM</button>
-    <button id="openThemeModalBtn" class="btn-small">TEMA</button>
+    <button class="btn-small" onclick="openModal('themeModal')">TEMA</button>
   </nav>
 
   <div class="user-menu">
     <div id="userAvatar" class="avatar">U</div>
     <span id="headerUser">Convidado</span>
     <button id="loginWithDiscord" class="btn-login">Entrar com Discord</button>
-    <button id="logoutBtn" class="btn-logout" style="display:none">Sair</button>
+    <button id="logoutBtn" class="btn-logout" style="display:none;">Sair</button>
   </div>
 </header>
 
