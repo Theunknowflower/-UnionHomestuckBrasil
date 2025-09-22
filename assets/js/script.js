@@ -59,102 +59,65 @@
   const createThemeBtn = $('createThemeBtn');
 
   // Auth: login/logout
-  if (loginBtn) {
-    loginBtn.addEventListener('click', async () => {
-      // redirectTo should point back to the current page path (works with GitHub Pages)
-      const redirectTo = window.location.origin + window.location.pathname;
-      const { error } = await sb.auth.signInWithOAuth({
-        provider: 'discord',
-        options: { redirectTo }
-      });
-      if (error) console.error('Erro login Discord:', error.message);
+const loginBtn = document.getElementById("loginWithDiscord");
+const logoutBtn = document.getElementById("logoutBtn");
+const headerUser = document.getElementById("headerUser");
+const avatar = document.getElementById("userAvatar");
+
+// === Login com Discord ===
+if (loginBtn) {
+  loginBtn.addEventListener("click", async () => {
+    const redirectTo = window.location.href; // sempre volta para a mesma página
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo }
     });
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      await sb.auth.signOut();
-      setLoggedOutUI();
-    });
-  }
-
-  // ensure profile exists: create profile row when first login
-  async function ensureProfile(user) {
-    if (!user) return;
-    try {
-      const { data } = await sb.from('profiles').select('id').eq('id', user.id).single();
-      if (!data) {
-        const display_name = user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Usuário');
-        await sb.from('profiles').insert([{ id: user.id, display_name }]);
-      }
-    } catch (e) {
-      // if single() throws because not found it's ok; use upsert fallback
-      try {
-        const display_name = user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Usuário');
-        await sb.from('profiles').upsert({ id: user.id, display_name });
-      } catch (err) {
-        console.warn('ensureProfile failed', err);
-      }
-    }
-  }
-
-  function setLoggedInUI(user) {
-    const display = user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Usuário');
-    if (headerUser) headerUser.innerText = display;
-    if (avatar) avatar.innerText = display[0]?.toUpperCase() || 'U';
-    if (loginBtn) loginBtn.style.display = 'none';
-    if (logoutBtn) logoutBtn.style.display = '';
-  }
-
-  function setLoggedOutUI() {
-    if (headerUser) headerUser.innerText = 'Convidado';
-    if (avatar) avatar.innerText = 'U';
-    if (loginBtn) loginBtn.style.display = '';
-    if (logoutBtn) logoutBtn.style.display = 'none';
-  }
-
-  // on auth change
-  async function handleAuth(session) {
-    const user = session?.user || null;
-    if (user) {
-      await ensureProfile(user);
-      setLoggedInUI(user);
-    } else {
-      setLoggedOutUI();
-    }
-  }
-
-  // initial auth state + subscription
-  (async () => {
-    try {
-      const s = await sb.auth.getSession();
-      await handleAuth(s?.data?.session);
-    } catch (e) { console.warn('getSession failed', e); }
-    sb.auth.onAuthStateChange((event, session) => handleAuth(session));
-  })();
-
-  // ------------------ POSTS & COMMENTS ------------------
-  async function renderPosts() {
-    const list = $('forumList');
-    if (!list) return;
-    list.innerHTML = '<div>Carregando posts...</div>';
-
-    const { data: posts, error } = await sb
-      .from('posts')
-      .select('id, content, created_at, user_id')
-      .order('created_at', { ascending: false });
-
     if (error) {
-      console.error('Erro carregar posts:', error);
-      list.innerHTML = '<div>Erro ao carregar posts.</div>';
-      return;
+      console.error("Erro login Discord:", error.message);
+      alert("Erro ao tentar logar no Discord.");
     }
+  });
+}
 
-    list.innerHTML = '';
-    if (!posts || posts.length === 0) {
-      list.innerHTML = '<div>Nenhum post ainda.</div>';
-      return;
-    }
+// === Logout ===
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    updateUI(null); // força reset visual
+  });
+}
+
+// === Atualizar UI de login/logout ===
+function updateUI(session) {
+  if (session?.user) {
+    const displayName =
+      session.user.user_metadata.full_name ||
+      session.user.user_metadata.name ||
+      session.user.email?.split("@")[0] ||
+      "Usuário";
+
+    headerUser.innerText = displayName;
+    avatar.innerText = displayName[0].toUpperCase();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    headerUser.innerText = "Convidado";
+    avatar.innerText = "U";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+}
+
+// === Restaurar sessão ao carregar página ===
+document.addEventListener("DOMContentLoaded", async () => {
+  const { data } = await supabase.auth.getSession();
+  updateUI(data.session);
+});
+
+// === Monitorar mudanças de sessão ===
+supabase.auth.onAuthStateChange((event, session) => {
+  updateUI(session);
+});
 
     // get unique user ids and fetch profiles
     const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
