@@ -1,347 +1,608 @@
-// Orion final script - Supabase + local fallback
-// Replace SUPABASE_URL & SUPABASE_ANON_KEY in index.html before deploy for Supabase integration.
 
-const SUPABASE_URL = window.SUPABASE_URL || "https://vhopcdzemdiqtvrwmqqo.supabase.co";
-const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
-const HAS_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
-const supabase = HAS_SUPABASE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-console.log("Orion script loaded — Supabase:", HAS_SUPABASE);
+// script.js (Orion) - versão corrigida e organizada
+// -------------------------------------------------
+// Substitua OAUTH_REDIRECT em caso de URL diferente.
+// As credenciais do Supabase devem ser definidas no HTML (window.SUPABASE_URL / window.SUPABASE_ANON_KEY)
 
-// ----------------- UI Helpers -----------------
-function q(selector, root = document) { return root.querySelector(selector); }
-function qa(selector, root = document) { return Array.from(root.querySelectorAll(selector)); }
+(async function () {
+  "use strict";
 
-function openTabById(id) {
-  qa('.panel').forEach(p => p.classList.remove('active'));
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-}
-qa('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab || btn.getAttribute('data-tab') || btn.textContent.toLowerCase();
-    if (btn.dataset.tab) openTabById(btn.dataset.tab);
-  });
-});
+  // --- CONFIG (use os valores definidos no index.html)
+  const SUPABASE_URL = window.SUPABASE_URL || "";
+  const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+  const OAUTH_REDIRECT = window.OAUTH_REDIRECT || "https://theunknowflower.github.io/UnionHomestuckBrasil/"; // ajuste se necessário
 
-// Modal helpers (robust — avoid duplicate definitions)
-window.openModal = window.openModal || function(id){
-  const m = document.getElementById(id);
-  if (!m) return;
-  m.setAttribute('aria-hidden', 'false');
-  m.style.display = 'flex';
-};
-window.closeModal = window.closeModal || function(id){
-  const m = document.getElementById(id);
-  if (!m) return;
-  m.setAttribute('aria-hidden', 'true');
-  m.style.display = 'none';
-};
-// attach modal close buttons
-document.addEventListener('click', (e) => {
-  const close = e.target.closest('[data-close]');
-  if (close) {
-    const id = close.getAttribute('data-close');
-    closeModal(id);
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn("Supabase keys não definidas. Configure window.SUPABASE_URL e window.SUPABASE_ANON_KEY no HTML.");
   }
-});
 
-// ----------------- Auth -----------------
-async function startAuthUI() {
-  const loginBtn = document.getElementById('loginWithDiscord');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const headerUser = document.getElementById('headerUser');
-  const avatar = document.getElementById('userAvatar');
+  // Cria cliente Supabase (CDN expõe `supabase.createClient`)
+  const supabase = (window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  if (!supabase) {
+    console.error("Supabase client não encontrado. Verifique se o script do supabase foi carregado antes deste arquivo.");
+    return;
+  }
+
+  console.log("Orion script loaded — Supabase:", !!supabase);
+
+  // --- Helpers de DOM seguros
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  const safeGet = (id) => document.getElementById(id);
+
+  // --- Modal helpers (centralizados) ---
+  function setModalState(modalEl, open) {
+    if (!modalEl) return;
+    modalEl.setAttribute("aria-hidden", open ? "false" : "true");
+    modalEl.style.display = open ? "flex" : "none";
+
+    // Mostrar/ocultar botão fechar adequadamente
+    const closeBtn = modalEl.querySelector(".modal-close");
+    if (closeBtn) closeBtn.style.display = open ? "block" : "none";
+  }
+  function openModal(id) {
+    const m = safeGet(id);
+    setModalState(m, true);
+  }
+  function closeModal(id) {
+    const m = safeGet(id);
+    setModalState(m, false);
+  }
+
+  // exportar para HTML inline se necessário
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+
+  // --- Inicialização de modais: garante que X esteja escondido até abrir ---
+  function initModals() {
+    $$(" .modal").forEach(m => {
+      m.setAttribute("aria-hidden", "true");
+      m.style.display = "none";
+      const closeBtn = m.querySelector(".modal-close");
+      if (closeBtn) {
+        // garante que não fique visível fora do modal
+        closeBtn.style.display = "none";
+        // adiciona handler seguro (não conflita com onclick inline)
+        closeBtn.addEventListener("click", () => closeModal(m.id));
+      }
+      // fecha ao clicar fora do inner
+      m.addEventListener("click", (ev) => {
+        if (ev.target === m) closeModal(m.id);
+      });
+    });
+
+    // fecha modais com ESC
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") {
+        $$("[aria-hidden='false']").forEach(modal => closeModal(modal.id));
+      }
+    });
+  }
+
+  // --- AUTH (Discord OAuth) ---
+  const loginBtn = safeGet("loginWithDiscord");
+  const logoutBtn = safeGet("logoutBtn");
+  const headerUser = safeGet("headerUser");
+  const avatar = safeGet("userAvatar");
+
+  async function startOAuthLogin() {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: { redirectTo: OAUTH_REDIRECT }
+      });
+      if (error) console.error("Erro login Discord:", error.message);
+      // não precisamos tratar success aqui porque o redirecionamento ocorre fora
+    } catch (err) {
+      console.error("signInWithOAuth falhou:", err);
+    }
+  }
 
   if (loginBtn) {
-    loginBtn.addEventListener('click', async () => {
-      if (!HAS_SUPABASE) return alert('Supabase não configurado. Coloque as chaves em index.html');
-      await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: { redirectTo: window.location.origin + window.location.pathname }
-      });
+    loginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      startOAuthLogin();
     });
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      if (HAS_SUPABASE) await supabase.auth.signOut();
-      headerUser.innerText = 'Convidado';
-      avatar.innerText = 'U';
-      loginBtn.style.display = 'inline-block';
-      logoutBtn.style.display = 'none';
+    logoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await supabase.auth.signOut();
+      applyLoggedOutUI();
+      alert("Você saiu da conta.");
     });
   }
 
-  if (HAS_SUPABASE) {
-    // update UI on auth change
-    supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session);
-    });
-    // try restore session on load
-    supabase.auth.getSession().then(r => applySession(r.data?.session));
-  } else {
-    // local fallback: guest
-    headerUser.innerText = 'Convidado';
-    avatar.innerText = 'U';
+  // Atualiza UI quando loga/desloga
+  function applyLoggedInUI(sessionUser) {
+    if (!headerUser || !avatar) return;
+    const userMeta = sessionUser?.user_metadata || {};
+    const displayName = (userMeta.full_name) ? userMeta.full_name : (sessionUser.email ? sessionUser.email.split("@")[0] : "Usuário");
+    headerUser.innerText = displayName;
+    avatar.innerText = (displayName[0] || "U").toUpperCase();
+    if (loginBtn) loginBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
   }
-}
-
-function applySession(session) {
-  const headerUser = document.getElementById('headerUser');
-  const avatar = document.getElementById('userAvatar');
-  const loginBtn = document.getElementById('loginWithDiscord');
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  if (session?.user) {
-    const user = session.user;
-    const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
-    headerUser.innerText = name;
-    avatar.innerText = name[0].toUpperCase();
-    if (loginBtn) loginBtn.style.display = 'none';
-    if (logoutBtn) logoutBtn.style.display = 'inline-block';
-    // load profile and roles
-    loadProfile();
-  } else {
-    headerUser.innerText = 'Convidado';
-    avatar.innerText = 'U';
-    if (loginBtn) loginBtn.style.display = 'inline-block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
+  function applyLoggedOutUI() {
+    if (!headerUser || !avatar) return;
+    headerUser.innerText = "Convidado";
+    avatar.innerText = "U";
+    if (loginBtn) loginBtn.style.display = "inline-block";
+    if (logoutBtn) logoutBtn.style.display = "none";
   }
-}
 
-// ----------------- Data storage helpers -----------------
-async function dbSelect(table, cols='*', filter=null) {
-  if (!HAS_SUPABASE) return [];
-  let q = supabase.from(table).select(cols);
-  if (filter && filter.col) q = q.eq(filter.col, filter.val);
-  const { data, error } = await q;
-  if (error) { console.error('DB select error', error); return []; }
-  return data || [];
-}
-
-async function dbInsert(table, row) {
-  if (!HAS_SUPABASE) return { error: { message: 'No DB configured' } };
-  return await supabase.from(table).insert([row]);
-}
-
-// ----------------- Forum: posts & comments -----------------
-async function renderPosts() {
-  const forumList = document.getElementById('forumList');
-  forumList.innerHTML = '<div class="muted">Carregando...</div>';
-  const posts = HAS_SUPABASE ? await dbSelect('posts', 'id, content, created_at, user_id') : [];
-  forumList.innerHTML = '';
-  (posts || []).sort((a,b)=> new Date(b.created_at)-new Date(a.created_at)).forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'post-card';
-    card.id = `post-${p.id}`;
-    const author = p.user_id ? (p.user_id.slice ? p.user_id.slice(0,6) : p.user_id) : 'Usuário';
-    card.innerHTML = `
-      <div class="post-head"><strong>${author}</strong><small>${new Date(p.created_at).toLocaleString()}</small></div>
-      <div class="post-body">${escapeHtml(p.content)}</div>
-      <div class="post-actions">
-        <button class="btn-gradient" data-post="${p.id}" onclick="togglePostOpen('${p.id}')">💬 Comentários</button>
-        <button class="btn-small" onclick="openProfile('${p.user_id}')">Perfil</button>
-      </div>
-      <div class="comments" id="comments-${p.id}" style="display:none"></div>
-    `;
-    forumList.appendChild(card);
-  });
-}
-
-// publish
-document.getElementById('publishPostBtn')?.addEventListener('click', async () => {
-  const ta = document.getElementById('newPostContent');
-  const content = ta?.value?.trim();
-  if (!content) return alert('Escreva algo!');
-  if (!HAS_SUPABASE) return alert('Para publicar precisa conectar o Supabase');
-  const { error } = await dbInsert('posts', { content });
-  if (error) { console.error(error); alert('Erro ao publicar'); return; }
-  ta.value = '';
-  closeModal('newPostModal');
-  renderPosts();
-});
-
-window.togglePostOpen = async function(postId) {
-  const comments = document.getElementById(`comments-${postId}`);
-  if (!comments) return;
-  const open = comments.style.display === 'block';
-  comments.style.display = open ? 'none' : 'block';
-  if (!open) await renderComments(postId);
-};
-
-async function renderComments(postId) {
-  const comments = HAS_SUPABASE ? await dbSelect('comments','id,content,created_at,user_id',{col:'post_id',val:postId}) : [];
-  const container = document.getElementById(`comments-${postId}`);
-  if (!container) return;
-  container.innerHTML = '';
-  (comments || []).sort((a,b)=> new Date(a.created_at)-new Date(b.created_at)).forEach(c=>{
-    const div = document.createElement('div');
-    div.className = 'comment';
-    div.innerHTML = `<strong>${c.user_id?.slice?.(0,6) || 'Usuário'}</strong><p>${escapeHtml(c.content)}</p><small>${new Date(c.created_at).toLocaleString()}</small>`;
-    container.appendChild(div);
-  });
-  // add form
-  const form = document.createElement('div');
-  form.innerHTML = `<textarea id="commentInput-${postId}" placeholder="Escreva um comentário..."></textarea>
-    <button class="btn-small" onclick="addComment('${postId}')">Comentar</button>`;
-  container.appendChild(form);
-}
-
-window.addComment = async function(postId) {
-  const input = document.getElementById(`commentInput-${postId}`);
-  if (!input) return;
-  const content = input.value.trim();
-  if (!content) return alert('Escreva algo antes de comentar');
-  if (!HAS_SUPABASE) return alert('Comentar requer Supabase configurado');
-  const { error } = await dbInsert('comments', { post_id: postId, content });
-  if (error) { console.error(error); alert('Erro ao comentar'); return; }
-  input.value = '';
-  renderComments(postId);
-};
-
-// ----------------- Profiles & theme -----------------
-async function loadProfile() {
-  if (!HAS_SUPABASE) return;
-  const { data: me } = await supabase.auth.getUser();
-  if (!me?.user) return;
-  const id = me.user.id;
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
-  if (!error && data) {
-    // optionally set header user (already done by auth handler)
-  }
-}
-
-window.openProfile = async function(userId) {
-  const container = document.getElementById('profileDetails');
-  container.innerHTML = '<div>Carregando...</div>';
-  if (!HAS_SUPABASE) { container.innerHTML = '<div>Sem DB configurado</div>'; openModal('profileModal'); return; }
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-  if (error) { container.innerHTML = '<div>Erro ao carregar perfil</div>'; openModal('profileModal'); return; }
-  container.innerHTML = `
-    <div class="profile-banner" style="background-image:url(${escapeAttr(data.banner_url || '')})"></div>
-    <div class="profile-info">
-      <div class="profile-avatar" style="background-image:url(${escapeAttr(data.avatar_url || '')})">${escapeHtml((data.display_name||'U')[0])}</div>
-      <h3>${escapeHtml(data.display_name||'Usuário')}</h3>
-      <p>Função: ${escapeHtml(data.role||'user')}</p>
-      <div style="margin-top:8px">
-        <button class="btn-small" onclick="sendFriendRequest('${data.id}')">Enviar pedido</button>
-        <button class="btn-small" onclick="reportUser('${data.id}')">Denunciar</button>
-      </div>
-    </div>`;
-  openModal('profileModal');
-};
-
-// basic friend request stub
-window.sendFriendRequest = async function(targetId) {
-  if (!HAS_SUPABASE) return alert('Requer Supabase');
-  const { error } = await dbInsert('friend_requests',{ receiver: targetId });
-  if (error) return alert('Erro ao enviar pedido');
-  alert('Pedido enviado');
-};
-
-// reports stub
-window.reportUser = async function(targetId) {
-  if (!HAS_SUPABASE) return alert('Requer Supabase');
-  const { error } = await dbInsert('reports',{ target_user: targetId, reason: 'Report enviado via UI' });
-  if (error) return alert('Erro ao denunciar');
-  alert('Denúncia enviada');
-};
-
-// Themes
-async function loadThemes() {
-  const themeList = document.getElementById('themeList');
-  if (!themeList) return;
-  themeList.innerHTML = '<div class="muted">Carregando temas...</div>';
-  if (!HAS_SUPABASE) { themeList.innerHTML = '<div class="muted">Sem temas (DB não configurado)</div>'; return; }
-  const { data, error } = await supabase.from('settings').select('id,value').eq('key','theme');
-  if (error) { themeList.innerHTML = '<div class="muted">Erro ao carregar</div>'; return; }
-  themeList.innerHTML = '';
-  (data||[]).forEach(row=>{
-    let t;
-    try { t = JSON.parse(row.value); } catch(e){ return; }
-    const btn = document.createElement('button');
-    btn.className = 'btn-theme';
-    btn.textContent = t.name||'Tema';
-    btn.style.background = t.bgColor || '#444';
-    btn.style.color = t.color || '#fff';
-    btn.addEventListener('click', () => applyTheme(t));
-    themeList.appendChild(btn);
-document.addEventListener("DOMContentLoaded", () => {
-  loadThemes();
-});
-  
-  // admin creator visibility
-  try {
-    const sess = (await supabase.auth.getUser()).data.user;
-    if (sess) {
-      const p = await dbSelect('profiles','role',{col:'id',val:sess.id});
-      if (p && p[0] && p[0].role === 'admin') {
-        document.getElementById('adminThemeCreator').style.display = 'block';
-      }
+  // Ouve mudanças de sessão (login/logout)
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    // session é objeto { user, ... } quando logado
+    if (session?.user) {
+      applyLoggedInUI(session.user);
+      // carrega perfil e posts quando logado
+      await loadProfile();
+      await renderPosts();
+    } else {
+      applyLoggedOutUI();
+      // ainda podemos renderizar posts públicos
+      await renderPosts();
     }
-  } catch(e){}
-}
+  });
 
-document.getElementById('createThemeBtn')?.addEventListener('click', async () => {
-  if (!HAS_SUPABASE) return alert('Requer Supabase');
-  const theme = {
-    name: document.getElementById('themeName').value || 'Tema',
-    color: document.getElementById('themeColor').value || '#fff',
-    bgColor: document.getElementById('themeBgColor')?.value || '#000',
-    bgImage: document.getElementById('themeBgImage')?.value || ''
+  // Inicializa estado atual
+  (async () => {
+    const { data: s } = await supabase.auth.getSession();
+    if (s?.session?.user) applyLoggedInUI(s.session.user);
+    else applyLoggedOutUI();
+  })();
+
+  // --- TABS / UI utilities ---
+  function openTab(tabId) {
+    $$(".panel").forEach(p => (p.style.display = "none"));
+    const el = safeGet(tabId);
+    if (el) el.style.display = "block";
+  }
+  window.openTab = openTab;
+
+  function toggleForumSidebar() {
+    const sidebar = safeGet("forumSidebar");
+    if (!sidebar) return;
+    const open = sidebar.classList.toggle("open");
+    sidebar.setAttribute("aria-hidden", !open);
+  }
+  window.toggleForumSidebar = toggleForumSidebar;
+
+  // --- POSTS / FORUM ---
+  async function renderPosts() {
+    const forumList = safeGet("forumList");
+    if (!forumList) return;
+    forumList.innerHTML = "<div>Carregando...</div>";
+
+    const { data: posts, error } = await supabase
+      .from("posts")
+      // puxamos o author através de profiles (assume foreign key profiles.id = auth.users.id)
+      .select("id, content, created_at, user_id, author:profiles(display_name)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao carregar posts:", error.message);
+      forumList.innerHTML = "<div>Erro no carregamento dos posts.</div>";
+      return;
+    }
+
+    forumList.innerHTML = "";
+    (posts || []).forEach(p => {
+      const card = createPostCard(p);
+      forumList.appendChild(card);
+    });
+  }
+
+  function createPostCard(post) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "post-card";
+    wrapper.id = `post-${post.id}`;
+
+    // Cabeçalho
+    const head = document.createElement("div");
+    head.className = "post-head";
+    head.innerHTML = `<strong>${post.author?.display_name || "Usuário"}</strong>
+                      <small>${new Date(post.created_at).toLocaleString()}</small>`;
+
+    // Corpo
+    const body = document.createElement("div");
+    body.className = "post-body";
+    body.innerHTML = post.content || "";
+
+    // Ações
+    const actions = document.createElement("div");
+    actions.className = "post-actions";
+
+    const btnComments = document.createElement("button");
+    btnComments.className = "btn-gradient";
+    btnComments.textContent = "💬 Comentários";
+    btnComments.addEventListener("click", () => togglePostOpen(post.id));
+    actions.appendChild(btnComments);
+
+    // Denunciar
+    const btnReport = document.createElement("button");
+    btnReport.className = "btn-small";
+    btnReport.textContent = "🚩 Denunciar";
+    btnReport.addEventListener("click", () => reportPost(post.id));
+    actions.appendChild(btnReport);
+
+    // Container de comentários (inicialmente escondido)
+    const comments = document.createElement("div");
+    comments.className = "comments";
+    comments.id = `comments-${post.id}`;
+    comments.style.display = "none";
+
+    wrapper.appendChild(head);
+    wrapper.appendChild(body);
+    wrapper.appendChild(actions);
+    wrapper.appendChild(comments);
+
+    return wrapper;
+  }
+
+  function togglePostOpen(postId) {
+    const postEl = safeGet(`post-${postId}`);
+    const commentsEl = safeGet(`comments-${postId}`);
+    if (!postEl || !commentsEl) return;
+
+    const open = postEl.classList.toggle("open");
+    commentsEl.style.display = open ? "block" : "none";
+    if (open) renderComments(postId);
+  }
+  window.togglePostOpen = togglePostOpen;
+
+  async function renderComments(postId) {
+    const container = safeGet(`comments-${postId}`);
+    if (!container) return;
+    container.innerHTML = "<div>Carregando comentários...</div>";
+
+    const { data, error } = await supabase
+      .from("comments")
+      .select("id, content, created_at, user_id, user:profiles(display_name)")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Erro ao carregar comentários:", error.message);
+      container.innerHTML = "<div>Erro ao carregar comentários.</div>";
+      return;
+    }
+
+    container.innerHTML = "";
+    (data || []).forEach(c => {
+      const cdiv = document.createElement("div");
+      cdiv.className = "comment";
+      cdiv.innerHTML = `<strong>${c.user?.display_name || "Usuário"}</strong>
+                        <p>${c.content}</p>
+                        <small>${new Date(c.created_at).toLocaleString()}</small>`;
+      container.appendChild(cdiv);
+    });
+
+    // Form para comentar
+    const form = document.createElement("div");
+    form.className = "comment-form-mini";
+    form.innerHTML = `
+      <textarea id="commentInput-${postId}" placeholder="Escreva um comentário..."></textarea>
+      <div style="text-align:right"><button class="btn-main" id="commentBtn-${postId}">Comentar</button></div>
+    `;
+    container.appendChild(form);
+
+    // Handler do botão
+    const btn = safeGet(`commentBtn-${postId}`);
+    if (btn) {
+      btn.addEventListener("click", async () => {
+        const ta = safeGet(`commentInput-${postId}`);
+        if (!ta) return;
+        const text = ta.value.trim();
+        if (!text) return alert("Escreva algo antes de comentar!");
+        await addComment(postId, text);
+        ta.value = "";
+        await renderComments(postId); // recarrega
+      });
+    }
+  }
+
+  async function addComment(postId, text) {
+    // valida uuid? assumimos que postId vem da DB como string
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (!user) {
+      alert("Você precisa estar logado para comentar.");
+      return;
+    }
+
+    const payload = {
+      post_id: postId,
+      user_id: user.id,
+      content: text
+    };
+
+    const { error } = await supabase.from("comments").insert([payload]);
+    if (error) {
+      console.error("Erro ao inserir comentário:", error.message || error);
+      alert("Erro ao enviar comentário.");
+    } else {
+      // sucesso - nada mais a fazer (caller re-renderiza)
+    }
+  }
+  window.addComment = addComment;
+
+  // --- Criar novo post (modal) ---
+  function attachNewPostHandler() {
+    const openBtn = safeGet("openNewPostBtn");
+    const publishBtn = safeGet("publishPostBtn");
+    if (openBtn) openBtn.addEventListener("click", () => openModal("newPostModal"));
+    if (!publishBtn) return;
+
+    publishBtn.addEventListener("click", async () => {
+      const ta = safeGet("newPostContent");
+      if (!ta) return;
+      const content = ta.value.trim();
+      if (!content) return alert("Escreva algo!");
+      const { data: udata } = await supabase.auth.getUser();
+      const user = udata?.user;
+      if (!user) return alert("Você precisa estar logado para postar.");
+
+      const { error } = await supabase.from("posts").insert([{ content, user_id: user.id }]);
+      if (error) {
+        console.error("Erro ao criar post:", error.message || error);
+        alert("Erro ao publicar post.");
+      } else {
+        ta.value = "";
+        closeModal("newPostModal");
+        await renderPosts();
+      }
+    });
+  }
+
+  // --- REPORT (denúncia) ---
+  async function reportPost(postId, reason = "Inapropriado") {
+    const { data: udata } = await supabase.auth.getUser();
+    const user = udata?.user;
+    if (!user) return alert("Você precisa estar logado para denunciar.");
+    const { error } = await supabase.from("reports").insert([{ reporter: user.id, post_id: postId, reason }]);
+    if (error) {
+      console.error("Erro ao denunciar:", error.message || error);
+      alert("Erro ao enviar denúncia.");
+    } else {
+      alert("Denúncia enviada. Obrigado por reportar.");
+    }
+  }
+  window.reportPost = reportPost;
+
+  // --- PROFILE (carregar / salvar) ---
+  async function loadProfile() {
+    const { data: udata } = await supabase.auth.getUser();
+    const user = udata?.user;
+    if (!user) return;
+
+    const { data, error } = await supabase.from("profiles").select("display_name, avatar_url, banner_url, role").eq("id", user.id).single();
+    if (error) {
+      console.warn("Perfil não encontrado (pode ser novo):", error.message || error);
+      return;
+    }
+
+    // atualiza UI se elementos existem
+    if (safeGet("profileName")) safeGet("profileName").innerText = data?.display_name || "Usuário";
+    if (safeGet("profileEmail")) safeGet("profileEmail").innerText = user.email || "";
+    if (safeGet("profileAvatar") && data?.avatar_url) safeGet("profileAvatar").style.backgroundImage = `url(${data.avatar_url})`;
+    if (safeGet("profileBanner") && data?.banner_url) safeGet("profileBanner").style.backgroundImage = `url(${data.banner_url})`;
+
+    // preencher o form se existir
+    if (safeGet("displayNameInput")) safeGet("displayNameInput").value = data?.display_name || "";
+    if (safeGet("avatarUrlInput")) safeGet("avatarUrlInput").value = data?.avatar_url || "";
+    if (safeGet("bannerUrlInput")) safeGet("bannerUrlInput").value = data?.banner_url || "";
+
+    // exibe admin creator se role=admin
+    if (data?.role === "admin") {
+      const adminEl = safeGet("adminThemeCreator");
+      if (adminEl) adminEl.style.display = "block";
+    }
+  }
+
+  // salvar perfil (upsert)
+  function attachProfileSaveHandler() {
+    const form = safeGet("profileForm");
+    if (!form) return;
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const { data: udata } = await supabase.auth.getUser();
+      const user = udata?.user;
+      if (!user) return alert("Você precisa estar logado.");
+
+      const updates = {
+        id: user.id,
+        display_name: safeGet("displayNameInput")?.value || null,
+        avatar_url: safeGet("avatarUrlInput")?.value || null,
+        banner_url: safeGet("bannerUrlInput")?.value || null,
+        updated_at: new Date()
+      };
+
+      const { error } = await supabase.from("profiles").upsert(updates, { returning: "minimal" });
+      if (error) {
+        console.error("Erro ao salvar perfil:", error.message || error);
+        alert("Erro ao salvar perfil.");
+      } else {
+        alert("Perfil atualizado!");
+        await loadProfile();
+      }
+    });
+  }
+
+  // --- THEMES ---
+  function applyTheme(theme) {
+    if (!theme) return;
+    if (theme.bgImage) {
+      document.body.style.background = `url(${theme.bgImage}) center/cover fixed`;
+      document.body.style.backgroundSize = "cover";
+    } else {
+      document.body.style.background = theme.bgColor || "";
+    }
+    document.documentElement.style.setProperty("--main-color", theme.color || "");
+    try { localStorage.setItem("selectedTheme", JSON.stringify(theme)); } catch (e) {}
+  }
+
+  async function loadThemes() {
+    const themeList = safeGet("themeList");
+    if (!themeList) return;
+    themeList.innerHTML = "<div>Carregando temas...</div>";
+
+    const { data, error } = await supabase.from("settings").select("id, value").eq("key", "theme");
+    if (error) {
+      console.error("Erro ao buscar temas:", error.message || error);
+      themeList.innerHTML = "<div>Erro ao carregar temas.</div>";
+      return;
+    }
+
+    themeList.innerHTML = "";
+    (data || []).forEach(row => {
+      try {
+        const theme = JSON.parse(row.value);
+        const b = document.createElement("button");
+        b.className = "btn-theme";
+        b.textContent = theme.name || "Tema";
+        b.style.color = theme.color || "#fff";
+        if (theme.bgImage) {
+          b.style.backgroundImage = `url(${theme.bgImage})`;
+          b.style.backgroundSize = "cover";
+          b.style.backgroundPosition = "center";
+        } else {
+          b.style.background = theme.bgColor || "#444";
+        }
+
+        b.addEventListener("mouseenter", () => applyTheme(theme));
+        b.addEventListener("mouseleave", () => {
+          const saved = localStorage.getItem("selectedTheme");
+          if (saved) try { applyTheme(JSON.parse(saved)); } catch (e) {}
+        });
+        b.addEventListener("click", () => applyTheme(theme));
+        themeList.appendChild(b);
+      } catch(e) {
+        console.warn("Tema inválido", e);
+      }
+    });
+
+    // Anexa handler do criador de tema (apenas uma vez)
+    const cbtn = safeGet("createThemeBtn");
+    if (cbtn && !cbtn._orion_attached) {
+      cbtn._orion_attached = true;
+      cbtn.addEventListener("click", async () => {
+        const name = safeGet("themeName")?.value || "Tema";
+        const color = safeGet("themeColor")?.value || "#ffffff";
+        const bgColor = safeGet("themeBgColor")?.value || "#000000";
+        const bgImage = safeGet("themeBgImage")?.value || "";
+        const theme = { name, color, bgColor, bgImage };
+        const { error } = await supabase.from("settings").insert([{ key: "theme", value: JSON.stringify(theme) }]);
+        if (error) {
+          console.error("Erro ao salvar tema:", error);
+          alert("Erro ao salvar tema.");
+        } else {
+          alert("Tema criado!");
+          await loadThemes();
+        }
+      });
+    }
+  }
+
+  // --- PÁGINAS (reader) ---
+  let pages = [];
+  let currentPageIndex = 0;
+
+  async function loadPages() {
+    const frame = safeGet("readerFrame");
+    if (!frame) return;
+    const { data, error } = await supabase.from("pages").select("id, slug, content_json").order("id", { ascending: true });
+    if (error) {
+      console.error("Erro ao carregar pages:", error.message || error);
+      return;
+    }
+    pages = data || [];
+    currentPageIndex = 0;
+    renderPage();
+  }
+
+  function renderPage() {
+    const frame = safeGet("readerFrame");
+    if (!frame) return;
+    if (!pages.length) {
+      frame.innerHTML = "<div>Sem páginas carregadas.</div>";
+      return;
+    }
+    const page = pages[currentPageIndex];
+    if (page.content_json && page.content_json.url) {
+      frame.innerHTML = `<iframe src="${page.content_json.url}" class="reader-iframe" style="width:100%;height:600px;border:none"></iframe>`;
+    } else {
+      frame.innerHTML = `<div class="page-text">${page.content_json ? JSON.stringify(page.content_json) : "Sem conteúdo"}</div>`;
+    }
+  }
+
+  // prev/next
+  (function attachReaderControls() {
+    const prev = safeGet("prevPageBtn");
+    const next = safeGet("nextPageBtn");
+    if (prev) prev.addEventListener("click", () => {
+      if (currentPageIndex > 0) { currentPageIndex--; renderPage(); }
+    });
+    if (next) next.addEventListener("click", () => {
+      if (currentPageIndex < pages.length - 1) { currentPageIndex++; renderPage(); }
+    });
+  })();
+
+  // --- INICIALIZAÇÃO (aplica handlers e carrega dados) ---
+  document.addEventListener("DOMContentLoaded", async () => {
+    initModals();
+    attachNewPostHandler();
+    attachProfileSaveHandler();
+    await loadThemes();
+    await loadPages();
+    // render posts aberta
+    await renderPosts();
+  });
+
+  // Exports para inverter a dep. se HTML chamar funções inline
+  window.applyTheme = applyTheme;
+  window.renderPosts = renderPosts;
+  window.loadPages = loadPages;
+  window.openProfile = async (u) => {
+    // se u não informado, abre perfil próprio
+    if (!u) {
+      const { data: ud } = await supabase.auth.getUser();
+      u = ud?.user?.id;
+      if (!u) return alert("Usuário não encontrado.");
+    }
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", u).single();
+    if (error) return console.error("Erro abrir perfil:", error.message || error);
+    const container = safeGet("profileDetails");
+    if (!container) return;
+    container.innerHTML = `
+      <div class="profile-banner" style="background:url(${data.banner_url || ""}) center/cover; height:120px;"></div>
+      <div class="profile-info" style="padding:12px;text-align:center">
+        <div style="width:80px;height:80px;margin:-40px auto 8px;border-radius:50%;background:#ddd;background-image:url(${data.avatar_url || ""});background-size:cover"></div>
+        <h3>${data.display_name || "Usuário"}</h3>
+        <p>Função: ${data.role || "user"}</p>
+        <div style="margin-top:8px">
+          <button class="btn-main" onclick="(async()=>{ const { data } = await supabase.auth.getUser(); const id = data?.user?.id; if(id) { await supabase.from('friend_requests').insert([{ sender: id, receiver: '${data.id}' }]); alert('Pedido enviado!'); } })()">Adicionar amigo</button>
+          <button class="btn-small" onclick="(function(){ reportPost('${data.id}'); })()">Denunciar</button>
+        </div>
+      </div>
+    `;
+    openModal("profileModal");
   };
-const { error } = await supabase.from("settings").insert([
-  { key: "theme", value: theme }
-]);
 
-  if (error) return alert('Erro ao salvar tema');
-  loadThemes();
-});
+  // logout helper exposto
+  window.logout = async function () {
+    await supabase.auth.signOut();
+    applyLoggedOutUI();
+    alert("Você saiu.");
+  };
 
-function applyTheme(theme) {
-  if (!theme) return;
-  if (theme.bgImage) {
-    document.body.style.background = `url(${theme.bgImage}) center/cover fixed`;
-  } else {
-    document.body.style.background = theme.bgColor || '';
-  }
-  document.documentElement.style.setProperty('--main-color', theme.color || '#2e7d32');
-  try { localStorage.setItem('selectedTheme', JSON.stringify(theme)); } catch(e){}
-}
+})(); // IIFE end
 
-// Pages reader (uses /pages table)
-let pages = [];
-let currentPageIndex = 0;
-async function loadPages() {
-  if (!HAS_SUPABASE) return;
-  const { data, error } = await supabase.from('pages').select('id,slug,content_json').order('id',{ascending:true});
-  if (error) return console.error('Erro pages', error);
-  pages = data || [];
-  currentPageIndex = 0;
-  renderPage();
-}
-function renderPage() {
-  const frame = document.getElementById('readerFrame');
-  if (!pages.length) { frame.innerHTML = '<div class="reader-placeholder">Nenhuma página</div>'; return; }
-  const p = pages[currentPageIndex];
-  if (p?.content_json?.url) {
-    frame.innerHTML = `<iframe src="${escapeAttr(p.content_json.url)}" class="reader-iframe" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>`;
-  } else {
-    frame.innerHTML = `<div class="page-text">${escapeHtml(JSON.stringify(p.content_json||{}))}</div>`;
-  }
-}
-document.getElementById('prevPageBtn')?.addEventListener('click', ()=>{ if (currentPageIndex>0){ currentPageIndex--; renderPage(); }});
-document.getElementById('nextPageBtn')?.addEventListener('click', ()=>{ if (currentPageIndex < pages.length-1){ currentPageIndex++; renderPage(); }});
 
-// utils
-function escapeHtml(s){ if (!s && s!==0) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
-
-// initialize
-document.addEventListener('DOMContentLoaded', async () => {
-  await startAuthUI();
-  loadThemes();
-  renderPosts();
-  if (HAS_SUPABASE) { loadPages(); }
-});
