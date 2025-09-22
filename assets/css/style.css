@@ -79,4 +79,43 @@ body{font-family:Inter, Arial, Helvetica, sans-serif;background:var(--bg);color:
   .site-header{height:auto;padding:12px;flex-direction:column;gap:10px;text-align:center}
   #siteLogo{height:60px}
 }
+/* ==== MODAL (comportamento seguro) ==== */
+/* por padrão o modal fica escondido e não captura cliques */
+.modal {
+  display: none;
+  pointer-events: none; /* não capture cliques quando escondido */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
 
+/* quando aberto (JS define aria-hidden="false") */
+.modal[aria-hidden="false"] {
+  display: flex;
+  pointer-events: auto;
+}
+
+/* conteudo do modal por cima, para que só o modal capture clique */
+.modal-inner {
+  position: relative;
+  z-index: 2100;
+  background: #fff;
+  max-width: 900px;
+  width: calc(100% - 40px);
+}
+
+/* certifique-se que header esteja abaixo do modal quando modal aberto */
+.site-header {
+  position: relative;
+  z-index: 1000;
+}
+
+/* força o botão de login a receber cliques e estar acima de coisas normais */
+#loginWithDiscord {
+  z-index: 1100;
+  position: relative;
+  pointer-events: auto;
+           }
