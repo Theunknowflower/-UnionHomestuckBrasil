@@ -267,7 +267,10 @@ async function loadThemes() {
     btn.style.color = t.color || '#fff';
     btn.addEventListener('click', () => applyTheme(t));
     themeList.appendChild(btn);
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  loadThemes();
+});
+  
   // admin creator visibility
   try {
     const sess = (await supabase.auth.getUser()).data.user;
