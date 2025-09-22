@@ -5,14 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Homestuck — Tradução de Fã</title>
 
+  <!-- Fonte retro estilo pixel -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <!-- CSS principal -->
   <link rel="stylesheet" href="assets/css/style.css">
 
-  <!-- Set your Supabase project keys here (replace before deploy) -->
+  <!-- Supabase keys (configure aqui) -->
   <script>
-    // IMPORTANT: replace these with your real Supabase URL and ANON KEY (or inject via environment).
-    window.SUPABASE_URL = window.SUPABASE_URL || 'https://vhopcdzemdiqtvrwmqqo.supabase.co';
-    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'REPLACE_ME_BEFORE_DEPLOY';
+    window.SUPABASE_URL = "https://vhopcdzemdiqtvrwmqqo.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZob3BjZHplbWRpcXR2cndtcXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjc2MTUsImV4cCI6MjA3MzgwMzYxNX0.j8podlPF9lBz2LfzDq1Z0NYF2QA3tQRK-tOIalWz2sI";
+
+    // URL para onde o usuário volta após login no Discord:
+    window.OAUTH_REDIRECT = "https://theunknowflower.github.io/UnionHomestuckBrasil/";
   </script>
 
   <!-- Supabase client -->
@@ -21,25 +26,21 @@
 <body>
   <header class="site-header">
     <div class="logo">
-      <!-- se você quer a logo grande: coloque uma imagem aqui (path com espaços URL-encoded) -->
-      <img src="assets/Homestuck%20ACT1/Logo_of_Homestuck.png" alt="Homestuck" style="height:48px;object-fit:contain;">
+      <img src="assets/Homestuck ACT1/Logo_of_Homestuck.png" alt="Homestuck Logo">
       <span>TRADUÇÃO DE FÃ</span>
     </div>
 
     <nav class="main-nav">
-      <!-- os ids dos painéis batem com o script.js -->
       <button onclick="openTab('ler')">LER</button>
       <button onclick="openTab('traducao')">TRADUÇÃO</button>
       <button onclick="openTab('conquistas')">CONQUISTAS</button>
       <button onclick="openTab('data')">DATA</button>
-      <button onclick="openTab('temas')">TEMAS</button>
-
-      <!-- abre modal de tema -->
+      <button onclick="openTab('forum')">FÓRUM</button>
       <button class="btn-small" onclick="openModal('themeModal')">TEMA</button>
     </nav>
 
     <div class="user-menu">
-      <div id="userAvatar" class="avatar" aria-hidden="false">U</div>
+      <div id="userAvatar" class="avatar">U</div>
       <span id="headerUser">Convidado</span>
       <button id="loginWithDiscord" class="btn-login">Entrar com Discord</button>
       <button id="logoutBtn" class="btn-logout" style="display:none;">Sair</button>
@@ -57,11 +58,42 @@
             <button class="btn-main" id="readPageBtn">Ler esta página</button>
           </div>
         </div>
-        <div class="reader-controls" style="margin-top:10px">
-          <button id="prevPageBtn">⬅️ Anterior</button>
-          <button id="nextPageBtn">Próxima ➡️</button>
+      </div>
+
+      <div class="reader-controls">
+        <button id="prevPageBtn">⬅️ Anterior</button>
+        <button id="nextPageBtn">Próxima ➡️</button>
+      </div>
+      <div id="readerFrame"></div>
+
+      <!-- Painel de Perfil -->
+      <div id="profilePanel" class="panel" style="display:none;">
+        <h2>Meu Perfil</h2>
+        <div class="profile-card">
+          <div class="profile-banner" id="profileBanner"></div>
+          <div class="profile-info">
+            <div class="profile-avatar" id="profileAvatar">U</div>
+            <h3 id="profileName">Usuário</h3>
+            <p id="profileEmail"></p>
+          </div>
         </div>
-        <div id="readerFrame" style="margin-top:12px"></div>
+
+        <h3>Editar Perfil</h3>
+        <form id="profileForm">
+          <label>
+            Nome de Exibição:
+            <input type="text" id="displayNameInput" placeholder="Digite seu nome">
+          </label>
+          <label>
+            URL do Avatar:
+            <input type="text" id="avatarUrlInput" placeholder="https://...">
+          </label>
+          <label>
+            URL do Banner:
+            <input type="text" id="bannerUrlInput" placeholder="https://...">
+          </label>
+          <button type="submit" class="btn-save">Salvar</button>
+        </form>
       </div>
 
       <!-- TRADUÇÃO -->
@@ -80,11 +112,11 @@
         <div id="achievementsList"></div>
       </div>
 
-      <!-- DATA / FÓRUM -->
+      <!-- DATA / Fórum -->
       <div id="data" class="panel" style="display:none;margin-top:16px">
         <h2>Data — Fórum</h2>
         <div style="margin-bottom:12px">
-          <button class="btn-main" id="openNewPostBtn" onclick="openModal('newPostModal')">Novo Post</button>
+          <button class="btn-main" id="openNewPostBtn">Novo Post</button>
         </div>
         <div id="forumList" class="forum-list"></div>
       </div>
@@ -94,28 +126,6 @@
         <h2>Escolher Tema</h2>
         <div id="themeList" class="theme-buttons"></div>
       </div>
-
-      <!-- PERFIL (painel local) -->
-      <div id="profilePanel" class="panel" style="display:none;margin-top:16px">
-        <h2>Meu Perfil</h2>
-        <div class="profile-card">
-          <div class="profile-banner" id="profileBanner" style="background:#ddd;height:120px"></div>
-          <div class="profile-info">
-            <div class="profile-avatar" id="profileAvatar">U</div>
-            <h3 id="profileName">Usuário</h3>
-            <!-- REMOVIDO: não mostramos e-mail publicamente -->
-          </div>
-        </div>
-
-        <h3>Editar Perfil</h3>
-        <form id="profileForm">
-          <label>Nome de Exibição:<br><input type="text" id="displayNameInput" placeholder="Digite seu nome"></label><br>
-          <label>URL do Avatar:<br><input type="text" id="avatarUrlInput" placeholder="https://..."></label><br>
-          <label>URL do Banner:<br><input type="text" id="bannerUrlInput" placeholder="https://..."></label><br>
-          <button type="submit" class="btn-save">Salvar</button>
-        </form>
-      </div>
-
     </section>
 
     <aside class="side-section">
@@ -126,10 +136,10 @@
     </aside>
   </main>
 
-  <!-- New post modal (iniciado escondido) -->
+  <!-- New post modal -->
   <div id="newPostModal" class="modal" aria-hidden="true" style="display:none">
     <div class="modal-inner">
-      <button class="modal-close" onclick="closeModal('newPostModal')">✕</button>
+      <button class="modal-close">✕</button>
       <h3>Novo Post</h3>
       <textarea id="newPostContent" placeholder="Escreva sua postagem..." style="width:100%;height:120px"></textarea>
       <div style="margin-top:8px">
@@ -138,33 +148,32 @@
     </div>
   </div>
 
-  <!-- Theme modal -->
+  <!-- Modal Tema -->
   <div id="themeModal" class="modal" aria-hidden="true" style="display:none">
     <div class="modal-inner">
-      <button class="modal-close" onclick="closeModal('themeModal')">✕</button>
+      <button class="modal-close">✕</button>
       <h3>Escolher Tema</h3>
       <div id="themeList"></div>
-
       <div id="adminThemeCreator" style="margin-top:12px; display:none">
         <h4>Criar novo tema</h4>
-        <input type="text" id="themeName" placeholder="Nome do tema"><br>
+        <input type="text" id="themeName" placeholder="Nome do tema">
         <input type="color" id="themeColor" value="#00ff00">
-        <input type="color" id="themeBgColor" value="#000000"><br>
-        <input type="text" id="themeBgImage" placeholder="URL imagem de fundo (opcional)"><br>
+        <input type="color" id="themeBgColor" value="#000000">
+        <input type="text" id="themeBgImage" placeholder="URL imagem de fundo (opcional)">
         <button class="btn-main" id="createThemeBtn">Criar Tema</button>
       </div>
     </div>
   </div>
 
-  <!-- Profile viewer modal -->
+  <!-- Modal Perfil -->
   <div id="profileModal" class="modal" aria-hidden="true" style="display:none">
     <div class="modal-inner">
-      <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
+      <button class="modal-close">✕</button>
       <div id="profileDetails"></div>
     </div>
   </div>
 
-  <!-- script principal -->
+  <!-- JS principal -->
   <script src="assets/js/script.js"></script>
 </body>
-                                 </html>
+        </html>
