@@ -49,3 +49,18 @@ body{font-family:Inter, Arial, Helvetica, sans-serif;background:var(--bg);margin
   .side-section{width:100%}
   .reader-frame{height:300px}
 }
+
+.site-header {
+  background: #2e7d32;
+  height: 140px; /* aumenta a faixa verde */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.logo-img {
+  height: 100px; /* ajusta o tamanho da logo */
+  margin-right: 10px;
+  vertical-align: middle;
+}
